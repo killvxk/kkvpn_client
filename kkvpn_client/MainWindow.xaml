@@ -1,0 +1,53 @@
+﻿<Window x:Name="wMain" x:Class="kkvpn_client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        Title="kkVPN" Height="400" Width="600" WindowStyle="None" ResizeMode="NoResize" Background="#FFBDBDBD" Loaded="wMain_Loaded" ShowInTaskbar="False">
+    <Grid Margin="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="24"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel x:Name="spMainMenu" Grid.Row="1" Grid.Column="0" MinWidth="136">
+            <StackPanel.Background>
+                <LinearGradientBrush EndPoint="1,0.5" MappingMode="RelativeToBoundingBox" StartPoint="0,0.5">
+                    <GradientStop Color="#FF2A2725" Offset="1"/>
+                    <GradientStop Color="#FF3A3633" Offset="0.9"/>
+                </LinearGradientBrush>
+            </StackPanel.Background>
+            <sa:MenuButton Height="40" x:Name="btnWelcome" Text="Witaj!" Image="D:\code\kkvpn_client\kkvpn_client\icons\home.png" IsChecked="True" Click="btnMenuButton_Click" Tag="welcome"/>
+            <sa:MenuButton Height="40" x:Name="btnConnect" Text="Połączenie" Image="D:\code\kkvpn_client\kkvpn_client\icons\connect.png" Click="btnMenuButton_Click" Tag="connection"/>
+            <sa:MenuButton Height="40" x:Name="btnSettings" Text="Ustawienia" Image="D:\code\kkvpn_client\kkvpn_client\icons\settings.png" Click="btnMenuButton_Click" Tag="settings"/>
+            <sa:MenuButton Height="40" x:Name="btnStatus" Text="Status" Image="D:\code\kkvpn_client\kkvpn_client\icons\status.png" Click="btnMenuButton_Click" Tag="status" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnPeers" Text="Połączenia" Image="D:\code\kkvpn_client\kkvpn_client\icons\peers.png" Click="btnMenuButton_Click" Tag="peers" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnAddPeer" Text="Dodaj połączenie" Image="D:\code\kkvpn_client\kkvpn_client\icons\add_peer.png" Click="btnMenuButton_Click" Tag="addpeer" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnDisconnect" Text="Rozłącz" Image="D:\code\kkvpn_client\kkvpn_client\icons\disconnect.png" Click="btnMenuButton_Click" Tag="disconnect" Visibility="Collapsed"/>
+        </StackPanel>
+        <Frame x:Name="frMain" Grid.Column="1" Background="#FFF3F3F3" Grid.Row="1" NavigationUIVisibility="Hidden"/>
+        <StackPanel x:Name="spTitleBarLeft" Orientation="Horizontal" MouseDown="spTitleBarRight_MouseDown">
+            <StackPanel.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFF3F3F3" Offset="0"/>
+                    <GradientStop Color="#FFE2E2E2" Offset="1"/>
+                </LinearGradientBrush>
+            </StackPanel.Background>
+            <Image Source="D:\code\kkvpn_client\kkvpn_client\icons\globe.png"/>
+            <TextBlock TextWrapping="Wrap" Text="kkVPN" FontFamily="Open Sans" VerticalAlignment="Center" Margin="4,4,0,3"/>
+        </StackPanel>
+        <DockPanel x:Name="spTitleBarRight" Grid.Column="1" MouseDown="spTitleBarRight_MouseDown">
+            <DockPanel.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFF3F3F3" Offset="0"/>
+                    <GradientStop Color="#FFE2E2E2" Offset="1"/>
+                </LinearGradientBrush>
+            </DockPanel.Background>
+            <sa:MenuButton x:Name="btnExit" HorizontalAlignment="Right" Image="D:\code\kkvpn_client\kkvpn_client\icons\close.png" Height="24" Width="24" Click="btnExit_Click"/>    
+        </DockPanel>
+    </Grid>
+</Window>

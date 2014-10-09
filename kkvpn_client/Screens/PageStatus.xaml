@@ -1,0 +1,46 @@
+﻿<Page x:Class="kkvpn_client.Screens.PageStatus"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="374" d:DesignWidth="448"
+	Title="PageStatus" Loaded="Page_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="60"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,6,0,0" TextWrapping="Wrap" Text="Mój adres IP:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="69"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,27,0,0" TextWrapping="Wrap" Text="Podsieć:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="69"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,48,0,0" TextWrapping="Wrap" Text="Maska podsieci:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="84"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,88,0,0" TextWrapping="Wrap" Text="Liczba połączeń:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="110"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,128,0,0" TextWrapping="Wrap" Text="Prędkość pobierania:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,149,0,0" TextWrapping="Wrap" Text="Prędkość wysyłania:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,189,0,0" TextWrapping="Wrap" Text="Odebrano bajtów:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,210,0,0" TextWrapping="Wrap" Text="Odebrano pakietów:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="108"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,231,0,0" TextWrapping="Wrap" Text="Wysłano bajtów:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="132"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,252,0,0" TextWrapping="Wrap" Text="Wysłano pakietów:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="132"/>
+        <TextBlock x:Name="lblIP"  Grid.Column="2" HorizontalAlignment="Right" Margin="0,6,0,0" TextWrapping="Wrap" Text="10.254.0.1" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblSubnet" Grid.Column="2" HorizontalAlignment="Right" Margin="0,27,0,0" TextWrapping="Wrap" Text="10.254.0.0" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblMask" Grid.Column="2" HorizontalAlignment="Right" Margin="0,48,0,0" TextWrapping="Wrap" Text="255.255.255.0" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblPeers" Grid.Column="2" HorizontalAlignment="Right" Margin="0,88,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblDLSpeed" Grid.Column="2" HorizontalAlignment="Right" Margin="0,128,0,0" TextWrapping="Wrap" Text="0,00 kb/s" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblULSpeed" Grid.Column="2" HorizontalAlignment="Right" Margin="0,149,0,0" TextWrapping="Wrap" Text="0,00 kb/s" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblDLBytes" Grid.Column="2" HorizontalAlignment="Right" Margin="0,189,0,0" TextWrapping="Wrap" Text="0,00 kb" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblDLPackets" Grid.Column="2" HorizontalAlignment="Right" Margin="0,210,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblULBytes" Grid.Column="2" HorizontalAlignment="Right" Margin="0,231,0,0" TextWrapping="Wrap" Text="0,00 kb" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock x:Name="lblULPackets" Grid.Column="2" HorizontalAlignment="Right" Margin="0,252,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="164" TextAlignment="Right" Grid.Row="1" Height="16"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,24,0,0" TextWrapping="Wrap" Text="Sieć:" VerticalAlignment="Top"/>
+        <TextBlock x:Name="lblNetworkName" Grid.Column="2" HorizontalAlignment="Left" Margin="0,24,0,0" TextWrapping="Wrap" Text="Nazwa" VerticalAlignment="Top"  TextAlignment="Right" Width="164"/>
+        <Rectangle Grid.Column="1" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="1" Margin="10,45,0,0" Stroke="Black" VerticalAlignment="Top" Width="318" Grid.ColumnSpan="2"/>
+
+    </Grid>
+</Page>

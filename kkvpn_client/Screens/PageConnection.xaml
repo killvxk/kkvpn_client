@@ -1,0 +1,29 @@
+﻿<Page x:Class="kkvpn_client.Screens.PageConnection"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+      mc:Ignorable="d" 
+      d:DesignHeight="374" d:DesignWidth="448"
+	  Title="PageConnection">
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="40"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="70"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="70"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="Aby rozpocząć pracę utwórz nową sieć:" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Open Sans" Margin="0,12,0,11"/>
+        <TextBlock Grid.Column="1" Grid.Row="3" TextWrapping="Wrap" Text="...lub połącz się z istniejącą siecią:" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Open Sans" Margin="0,12,0,11"/>
+        <sa:BasicButton x:Name="btnNewSubnetwork" Grid.Column="1" Grid.Row="2" Height="40" Margin="40,15,140,15" Text="Utwórz nową sieć" Image="D:\code\kkvpn_client\kkvpn_client\icons\new_network.png" Click="Button_Click" Tag="newsubnetwork"/>
+        <sa:BasicButton x:Name="btnConnectToExisting" Grid.Column="1" Grid.Row="4" Height="40" Margin="40,15,140,15" Text="Połącz do istniejącej sieci" Image="D:\code\kkvpn_client\kkvpn_client\icons\connect_to_existing.png" Click="Button_Click" Tag="connecttoexisting"/>
+    </Grid>
+</Page>

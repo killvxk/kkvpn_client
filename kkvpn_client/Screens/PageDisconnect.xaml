@@ -1,0 +1,19 @@
+﻿<Page x:Class="kkvpn_client.Screens.PageDisconnect"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+      mc:Ignorable="d" 
+      d:DesignHeight="374" d:DesignWidth="448"
+	  Title="PageDisconnect">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="187"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock TextWrapping="Wrap" Text="Czy na pewno chcesz się rozłączyć?" Margin="0,0,0,5" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
+        <sa:BasicButton x:Name="btnDisconnect" Grid.Row="1" Height="40" Width="100" Text="Rozłącz" Image="D:\code\kkvpn_client\kkvpn_client\icons\disconnect_prompt.png" VerticalAlignment="Top" Click="btnDisconnect_Click"/>
+    </Grid>
+</Page>
