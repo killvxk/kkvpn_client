@@ -22,11 +22,13 @@ namespace kkvpn_client.Screens
     {
         private ConnectionManager Connection;
         private MainWindow ParentWindow;
+        private AppSettings Settings;
 
         public PageConnectToExisting(MainWindow ParentWindow)
         {
             this.ParentWindow = ParentWindow;
             Connection = ((App)Application.Current).Connection;
+            Settings = ((App)Application.Current).Settings;
             InitializeComponent();
         }
 
@@ -41,20 +43,25 @@ namespace kkvpn_client.Screens
             ReturnToConnectionMainPage();
         }
 
-        private void tbName_TextChanged(object sender, TextChangedEventArgs e)
+        private void tbPeerName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            tbConnectionString.Text = Connection.GetConnectionString(tbName.Text);
+            Settings.UserName = tbPeerName.Text;
+            tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                Connection.OpenForConnection();
+                lblPort.Text = "Otwieranie portu, proszę czekać.";
+                await Connection.OpenForConnection();
+                tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
+                lblPort.Text = "Port otwarty, oczekiwanie na połączenie.";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Otwarcie portu niemożliwe: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                App.LogException(ex);
                 ReturnToConnectionMainPage();
             }
         }
@@ -64,6 +71,11 @@ namespace kkvpn_client.Screens
             ParentWindow.NavigateTo("connection");
             ParentWindow.SetVisibilityWelcomeAndSettings(true);
             ParentWindow.ChangeConnectMenuItemTarget("connection");
+        }
+
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Settings.SaveToFile();
         }
     }
 }

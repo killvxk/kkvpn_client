@@ -52,7 +52,14 @@ namespace kkvpn_client
         public void AddIP(UInt32 IP)
         {
             if (CheckForExistingEntry(IP))
+            {
                 return;
+            }
+
+            if (NTEContext != 0)
+            {
+                DeleteIPAddress(NTEContext);
+            }
 
             int InterfaceTableSize = 0;
 
@@ -85,7 +92,8 @@ namespace kkvpn_client
                 {
                     throw new InterfaceConfigurationException(
                         retVal, 
-                        "Nie powiodło się ustawienie nowego adres IP w domyślnym interfejsie!"
+                        "Nie powiodło się ustawienie nowego adresu IP w domyślnym interfejsie! " +
+                        "Upewnij się, że program został uruchomiony z uprawnieniami administratora"
                         );
                 }
             }
@@ -93,7 +101,7 @@ namespace kkvpn_client
             {
                 throw new InterfaceConfigurationException(
                         0,
-                        "Nie powiodło się ustawienie nowego adres IP w domyślnym interfejsie!"
+                        "Nie powiodło się ustawienie nowego adresu IP w domyślnym interfejsie!"
                         );
             }
                 

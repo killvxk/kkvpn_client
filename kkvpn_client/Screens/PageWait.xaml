@@ -16,6 +16,6 @@
         </Grid.RowDefinitions>
         <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="Proszę czekać..." VerticalAlignment="Bottom" Margin="184,0,183,0"/>
         <ProgressBar HorizontalAlignment="Center" Height="12" Grid.Row="1" VerticalAlignment="Top" Width="144" IsIndeterminate="True" Margin="152,0"/>
-        <sa:BasicButton x:Name="btnCancel" Grid.Row="2" Height="40" Width="100" VerticalAlignment="Top" HorizontalAlignment="Center" Text="Anuluj" Image="D:\code\kkvpn_client\kkvpn_client\icons\cancel.png" Click="btnCancel_Click"/>
+        <sa:BasicButton x:Name="btnCancel" Grid.Row="2" Height="40" Width="100" VerticalAlignment="Top" HorizontalAlignment="Center" Text="Anuluj" Image="\\KAJTEK-DESKTOP\Debug\icons\cancel.png" Click="btnCancel_Click"/>
     </Grid>
 </Page>

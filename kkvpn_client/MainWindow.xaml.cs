@@ -149,7 +149,8 @@ namespace kkvpn_client
 
         private void wMain_Loaded(object sender, RoutedEventArgs e)
         {
-            this.SetInitialPosition();            
+            this.SetInitialPosition();
+            ((App)Application.Current).Connection.OnExternalConnected += new EventHandler(Connection_Connected);
 
             this.NavigateTo("welcome");
         }
@@ -159,6 +160,16 @@ namespace kkvpn_client
             var workingArea = System.Windows.SystemParameters.WorkArea;
             this.Left = workingArea.Right - this.Width - 4;
             this.Top = workingArea.Bottom - this.Height - 4;
+        }
+
+        private void Connection_Connected(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(() => 
+            { 
+                ShowMenu(true);
+                NavigateTo("status");
+                SetConnected(true);
+            });
         }
 
         private void btnExit_Click(object sender, RoutedEventArgs e)

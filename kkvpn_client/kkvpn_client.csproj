@@ -39,6 +39,9 @@
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net45\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Drawing, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Mono.Nat">
+      <HintPath>..\mono-nat-1.1.0\Mono.Nat.dll</HintPath>
+    </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\..\kkvpn_global_server\kkvpn_global_server\bin\Debug\protobuf-net.dll</HintPath>
     </Reference>
@@ -68,6 +71,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AppSettings.cs" />
+    <Compile Include="Communication\Base64PeerData.cs" />
     <Compile Include="Communication\CommPacket.cs" />
     <Compile Include="Communication\Constants.cs" />
     <Compile Include="Communication\PeerData.cs" />
@@ -83,7 +88,8 @@
     <Compile Include="Engine\DriverSystemCheck.cs" />
     <Compile Include="Engine\MiscFunctions.cs" />
     <Compile Include="Engine\NetworkInterfaceConfiguation.cs" />
-    <Compile Include="Engine\Subnetwork.cs" />
+    <Compile Include="Communication\Subnetwork.cs" />
+    <Compile Include="Engine\UPnP.cs" />
     <Compile Include="Screens\PageAddPeer.xaml.cs">
       <DependentUpon>PageAddPeer.xaml</DependentUpon>
     </Compile>
@@ -114,7 +120,6 @@
     <Compile Include="Screens\PageWelcome.xaml.cs">
       <DependentUpon>PageWelcome.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UPnP\UPnP.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

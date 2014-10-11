@@ -7,7 +7,7 @@ using ProtoBuf;
 namespace kkvpn_client.Communication
 {
     [ProtoContract]
-    public class UdpEncryptedPacket : CommPacket
+    class UdpEncryptedPacket : CommPacket
     {
         [ProtoMember(1)]
         public byte KeyID;

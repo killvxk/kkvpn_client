@@ -6,7 +6,7 @@
       xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
       mc:Ignorable="d" 
       d:DesignHeight="374" d:DesignWidth="448"
-	  Title="PageConnectToExisting" Loaded="Page_Loaded">
+	  Title="PageConnectToExisting" Loaded="Page_Loaded" Unloaded="Page_Unloaded">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -14,21 +14,21 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="70"/>
-            <RowDefinition Height="90"/>
+            <RowDefinition Height="110"/>
             <RowDefinition Height="70"/>
-            <RowDefinition Height="25"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40"/>
             <ColumnDefinition Width="405*"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Grid.Row="3" TextWrapping="Wrap" Text="Aby połączyć się z istniejącą siecią, udostępnij poniższy łańcuch znaków jej twórcy lub innej osobie, która do sieci tej należy:" VerticalAlignment="Center" FontFamily="Open Sans" Width="297" Height="48"/>
-        <TextBox Name="tbConnectionString" Grid.Column="1" HorizontalAlignment="Left" Height="66" Grid.Row="4" TextWrapping="Wrap" VerticalAlignment="Center" Width="334" FontFamily="Open Sans Light" IsReadOnly="True"/>
-        <sa:BasicButton Name="btnCopyToClipboard" Grid.Column="1" Grid.Row="5" Text="Kopiuj do schowka" Margin="193,15,47,15" Image="D:\code\kkvpn_client\kkvpn_client\icons\clipboard.png" Click="btnCopyToClipboard_Click"/>
-        <sa:BasicButton Name="btnCancel" Grid.Column="1" Grid.Row="5" Text="Cofnij" Margin="20,15,220,15" Image="D:\code\kkvpn_client\kkvpn_client\icons\back.png" Click="btnCancel_Click"/>
-        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Grid.Row="1" TextWrapping="Wrap" Text="Wybierz nazwę użytkownika:" VerticalAlignment="Center" FontFamily="Open Sans" Height="16" Margin="0,7" Width="297"/>
-        <TextBox Name="tbName" Grid.Column="1" HorizontalAlignment="Left" Height="22" Grid.Row="2" TextWrapping="Wrap" Text="Użytkownik" VerticalAlignment="Center" Width="120" TextChanged="tbName_TextChanged"/>
-        <TextBlock Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Port otwarty, oczekiwanie na połączenie: " VerticalAlignment="Bottom" Height="16" Width="217"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Grid.Row="3" TextWrapping="Wrap" Text="Aby połączyć się z istniejącą siecią, udostępnij poniższy łańcuch znaków jej twórcy lub innej osobie, która do sieci tej należy:" VerticalAlignment="Center" FontFamily="Segoe UI" Width="297" Height="48" Margin="0,11,0,12"/>
+        <TextBox Name="tbConnectionString" Grid.Column="1" HorizontalAlignment="Left" Height="90" Grid.Row="4" TextWrapping="Wrap" VerticalAlignment="Center" Width="334" FontFamily="Segoe UI Light" IsReadOnly="True" Margin="0,10"/>
+        <sa:BasicButton Name="btnCopyToClipboard" Grid.Column="1" Grid.Row="5" Text="Kopiuj do schowka" Margin="193,15,47,15" Image="\\KAJTEK-DESKTOP\Debug\icons\clipboard.png" Click="btnCopyToClipboard_Click"/>
+        <sa:BasicButton Name="btnCancel" Grid.Column="1" Grid.Row="5" Text="Cofnij" Margin="20,15,220,15" Image="\\KAJTEK-DESKTOP\Debug\icons\back.png" Click="btnCancel_Click"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Grid.Row="1" TextWrapping="Wrap" Text="Wybierz nazwę użytkownika:" VerticalAlignment="Center" FontFamily="Segoe UI" Height="16" Margin="0,7,0,8" Width="297"/>
+        <TextBox Name="tbPeerName" Grid.Column="1" HorizontalAlignment="Left" Height="22" Grid.Row="2" TextWrapping="Wrap" Text="Użytkownik" VerticalAlignment="Center" Width="120" TextChanged="tbPeerName_TextChanged"/>
+        <TextBlock Name="lblPort" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Port otwarty, oczekiwanie na połączenie: " VerticalAlignment="Bottom" Height="16" Width="217"/>
         <ProgressBar Grid.Column="1" HorizontalAlignment="Left" Height="16" Margin="243,0,0,0" VerticalAlignment="Bottom" Width="132" Value="50" IsIndeterminate="True"/>
     </Grid>
 </Page>

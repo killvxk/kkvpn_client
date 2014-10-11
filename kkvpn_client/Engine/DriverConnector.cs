@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace kkvpn_client.Engine
 {
-    class DriverConnector
+    unsafe class DriverConnector
     {
         const uint EVENT_ALL_ACCESS = (0x000F0000 | 0x00100000 | 0x00000003);
         const uint IOCTL_REGISTER = ((0x12) << 16) | ((0x1) << 2);
@@ -51,10 +51,10 @@ namespace kkvpn_client.Engine
             IntPtr template
             );
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern int CloseHandle(
-            SafeFileHandle hObject
-            );
+        //[DllImport("kernel32.dll", SetLastError = true)]
+        //private static extern int CloseHandle(
+        //    SafeFileHandle hObject
+        //    );
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern bool DeviceIoControl(
@@ -99,7 +99,10 @@ namespace kkvpn_client.Engine
             );
 
         [DllImport("kernel32.dll")]
-        static extern bool CancelIo(SafeFileHandle hFile);
+        unsafe static extern int CancelIoEx(
+            SafeFileHandle hFile,
+            NativeOverlapped* lpOverlapped
+            );
 
         #endregion Unmanaged code imports
 
@@ -114,27 +117,10 @@ namespace kkvpn_client.Engine
         private const string DriverFilename = "C:\\DriverTest\\Drivers\\kkdrv.sys";
 
         private IntPtr ReadBuffer;
-
-        private ulong RxBytes;
-        private ulong RxPackets;
-
-        private ulong TxBytes;
-        private ulong TxPackets;
+        NativeOverlapped* ReadOverlapped;
+        NativeOverlapped* WriteOverlapped;
 
         public DriverConnector() {}
-
-        public ulong GetRxBytes() { return RxBytes; }
-        public ulong GetRxPackets() { return RxPackets; }
-        public ulong GetTxBytes() { return TxBytes; }
-        public ulong GetTxPackets() { return TxPackets; }
-
-        public void ResetStats()
-        {
-            RxBytes = 0;
-            RxPackets = 0;
-            TxBytes = 0;
-            TxPackets = 0;
-        }
 
         public void InitializeDevice()
         {
@@ -204,8 +190,6 @@ namespace kkvpn_client.Engine
                     "Przesłanie danych do sterownika zakończyło się niepowodzeniem!"
                     );
             }
-
-            ResetStats();
         }
 
         public void ResetFilter()
@@ -238,17 +222,17 @@ namespace kkvpn_client.Engine
 
         public void CloseDevice()
         {
-            ResetFilter();
-
-            if (ReadBuffer == IntPtr.Zero)
+            if (ReadBuffer != IntPtr.Zero)
             {
                 Marshal.FreeHGlobal(ReadBuffer);
             }
 
-            if (Device != null)
+            if (!Device.IsClosed && !Device.IsInvalid)
             {
-                CancelIo(Device);
-                CloseHandle(Device);
+                CancelIoEx(Device, null);
+                ResetFilter();
+
+                Device.Close();
             }
         }
 
@@ -269,8 +253,9 @@ namespace kkvpn_client.Engine
                 ReadBuffer = Marshal.AllocHGlobal(BUFFER_SIZE);
             }
             Overlapped overlapped = new Overlapped();
+            ReadOverlapped = overlapped.Pack(ReadCompletionCallback, null);
 
-            ReadFile(Device, ReadBuffer, BUFFER_SIZE, IntPtr.Zero, overlapped.Pack(ReadCompletionCallback, null));
+            ReadFile(Device, ReadBuffer, BUFFER_SIZE, IntPtr.Zero, ReadOverlapped);
         }
 
         public void StopReading()
@@ -287,28 +272,39 @@ namespace kkvpn_client.Engine
                     );
             }
             Overlapped overlapped = new Overlapped();
+            ReadOverlapped = overlapped.Pack(ReadCompletionCallback, null);
 
             ReadFile(
                 Device, 
                 ReadBuffer, 
                 BUFFER_SIZE, 
-                IntPtr.Zero, 
-                overlapped.Pack(ReadCompletionCallback, null)
+                IntPtr.Zero,
+                ReadOverlapped
                 );
         }
 
         unsafe void ReadCompletionCallback(uint errorCode, uint bytesRead, NativeOverlapped* nativeOverlapped)
         {
+            const int packetLengthHeaderOffset = 0x2;
+
             try 
             {
                 if (errorCode == 0 && Processor != null)
                 {
-                    byte[] Result = new byte[bytesRead];
-                    Marshal.Copy(ReadBuffer, Result, 0, (int)bytesRead);
-                    Processor(Result);
+                    uint totalLength = (uint)bytesRead;
+                    int offset = 0;
+                    ushort packetLength = (ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset);
 
-                    TxBytes += (ulong)bytesRead;
-                    TxPackets++;
+                    while (offset <= totalLength)
+                    {
+                        byte[] temp = new byte[packetLength];
+                        Marshal.Copy(ReadBuffer + offset, temp, 0, packetLength);
+
+                        Processor(temp);
+
+                        offset += packetLength;
+                        packetLength = (ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset);
+                    }
                 }
 
                 if (!isStopping)
@@ -323,46 +319,21 @@ namespace kkvpn_client.Engine
             }
         }
 
-        unsafe public void WriteData(byte[] Data)
+        public void WriteData(byte[] Data)
         {
-            const int PacketLengthHeaderOffset = 0x2;
-
             if (Device != null)
             {
-                uint BytesWritten = 0;
-                uint TotalLength = (UInt32)Data.Length;
-                int Offset = 0;
-                ushort PacketLength = BitConverter.ToUInt16(Data, PacketLengthHeaderOffset).InvertBytes();
+                uint bytesWritten = 0;
+                Overlapped overlapped = new Overlapped();
+                WriteOverlapped = overlapped.Pack(WriteCompletionCallback, null);
 
-                while(true)
-                {
-                    byte[] Temp = new byte[PacketLength];
-                    Buffer.BlockCopy(Data, Offset, Temp, 0, PacketLength);
-
-                    Overlapped overlapped = new Overlapped();
-
-                    WriteFile(
-                        Device,
-                        Temp,
-                        (uint)PacketLength,
-                        ref BytesWritten,
-                        overlapped.Pack(WriteCompletionCallback, null)
-                        );
-
-                    Offset += PacketLength;
-
-                    if (Offset + PacketLength < TotalLength)
-                    {
-                        PacketLength = BitConverter.ToUInt16(Data, Offset + PacketLengthHeaderOffset).InvertBytes();
-                    }
-                    else
-                    {
-                        break;
-                    }      
-                }
-
-                RxBytes += (UInt64)TotalLength;
-                RxPackets++;
+                WriteFile(
+                    Device,
+                    Data,
+                    (uint)Data.Length,
+                    ref bytesWritten,
+                    WriteOverlapped
+                    );  
             }
         }
 

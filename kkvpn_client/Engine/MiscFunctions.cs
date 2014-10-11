@@ -45,16 +45,11 @@ namespace kkvpn_client
                 return 0;
         }
 
-        public static string[] IntToIP(this uint IP)
+        public static uint IPToInt(this IPAddress Host)
         {
-            string[] Result = new string[4];
-
-            byte[] temp = BitConverter.GetBytes(IP);
+            byte[] temp = Host.GetAddressBytes();
             Array.Reverse(temp);
-            for (int i = 0; i < 4; i++)
-                Result[i] = (temp[i].ToString());
-
-            return Result;
+            return BitConverter.ToUInt32(temp, 0);
         }
     }
 }

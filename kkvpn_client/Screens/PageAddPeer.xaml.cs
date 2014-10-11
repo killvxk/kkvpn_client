@@ -34,16 +34,23 @@ namespace kkvpn_client.Screens
         {
             try
             {
-                Connection.AddPeer(tbConnectionString.Text);
+                Connection.AddPeer(tbConnectionString.Text, tbAddress.Text.IPToInt());
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                MessageBox.Show("Aby dodać użytkownika musisz być połączony!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Wystąpił błąd podczas dodawania użytkownika!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                App.LogException(ex);
             }
-            catch (WrongConnectionStringException)
+            catch (WrongConnectionStringException ex)
             {
                 MessageBox.Show("Błędny łańcuch znaków! Sprawdź czy ciąg znaków jest na pewno poprawny.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                App.LogException(ex);
             }
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            tbAddress.Text = Connection.GetLowestFreeIP();
         }
     }
 }

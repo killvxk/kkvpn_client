@@ -23,21 +23,25 @@ namespace kkvpn_client.Screens
     {
         private ConnectionManager Connection;
         private MainWindow ParentWindow;
+        private AppSettings Settings;
 
         public PageNewSubnetwork(MainWindow ParentWindow)
         {
             this.ParentWindow = ParentWindow;
             Connection = ((App)Application.Current).Connection;
+            Settings = ((App)Application.Current).Settings;
             InitializeComponent();
         }
 
         private void tbAddress_TextChanged(object sender, TextChangedEventArgs e)
         {
+            Settings.SubnetworkAddress = tbAddress.Text;
             UpdateSubnetworkInfo();
         }
 
         private void iudCIDR_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            Settings.SubnetworkCIDR = iudCIDR.Value?? 24;
             UpdateSubnetworkInfo();
         }
 
@@ -51,7 +55,7 @@ namespace kkvpn_client.Screens
 
             uint count = (uint)((1 << (32 - (int)iudCIDR.Value)) - 2);
             uint enteredIP = tbAddress.Text.IPToInt().InvertBytes();
-            uint mask = (((uint)iudCIDR.Value).GetMaskFromCIDR()).InvertBytes();
+            uint mask = (((uint)(iudCIDR.Value?? 24)).GetMaskFromCIDR()).InvertBytes();
 
             btnCreate.IsEnabled = enteredIP != 0;
             if (enteredIP != 0)
@@ -90,6 +94,11 @@ namespace kkvpn_client.Screens
             catch (Exception ex)
             {
                 MessageBox.Show("Otwarcie nowej sieci niemożliwe: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                App.LogException(ex);
+
+                ParentWindow.ShowMenu(true);
+                ParentWindow.NavigateTo("connection");
+                ParentWindow.SetConnected(false);
             }
         }
 
@@ -98,6 +107,29 @@ namespace kkvpn_client.Screens
             ParentWindow.NavigateTo("connection");
             ParentWindow.SetVisibilityWelcomeAndSettings(true);
             ParentWindow.ChangeConnectMenuItemTarget("connection");
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            tbNetworkName.Text = Settings.SubnetworkName;
+            tbPeerName.Text = Settings.UserName;
+            tbAddress.Text = Settings.SubnetworkAddress;
+            iudCIDR.Value = Settings.SubnetworkCIDR;
+        }
+
+        private void tbNetworkName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Settings.SubnetworkName = tbNetworkName.Text;
+        }
+
+        private void tbPeerName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Settings.UserName = tbPeerName.Text;
+        }
+
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Settings.SaveToFile();
         }
     }
 }

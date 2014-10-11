@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kkvpn_client.Communication
 {
-    public static class Constants
+    static class Constants
     {
         public const byte CommunicationVersion = 1;
 

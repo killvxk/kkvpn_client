@@ -8,7 +8,7 @@ using System.Net;
 namespace kkvpn_client.Communication
 {
     [ProtoContract]
-    public class PeerData
+    class PeerData
     {
         [ProtoMember(1)]
         public string Name;
@@ -17,20 +17,20 @@ namespace kkvpn_client.Communication
         [ProtoMember(3)]
         public uint IP;
         [ProtoMember(4)]
-        public uint Port;
+        public int Port;
         [ProtoMember(5)]
         public byte[] PublicKey;
 
-        public int AesKey;
-        public bool KeyExchangeInProgress;
+        public int KeyIndex;
+        //public bool KeyExchangeInProgress;
 
         public PeerData() { }
 
         public PeerData(
             string Name,
             UInt32 SubnetworkIP,
-            UInt32 IP,
-            UInt16 Port,
+            uint IP,
+            int Port,
             byte[] PublicKey
             )
         {
@@ -39,14 +39,25 @@ namespace kkvpn_client.Communication
             this.IP = IP;
             this.Port = Port;
             this.PublicKey = PublicKey;
-            this.KeyExchangeInProgress = false;
+            //this.KeyExchangeInProgress = false;
 
-            this.AesKey = 0;
+            this.KeyIndex = 0;
         }
 
-        public IPEndPoint GetEndpoint() 
+        public IPEndPoint GetEndpoint()
         {
-            return new IPEndPoint((long)IP, (int)Port);
+            return new IPEndPoint((long)IP.InvertBytes(), Port);
+        }
+
+        internal static PeerData GetDataFromBase64PeerData(Base64PeerData peerData, uint SubnetworkIP)
+        {
+            return new PeerData(
+                peerData.Name, 
+                SubnetworkIP, 
+                peerData.IP, 
+                peerData.Port, 
+                peerData.PublicKey
+                );
         }
     }
 }

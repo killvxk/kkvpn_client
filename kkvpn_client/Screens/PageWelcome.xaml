@@ -19,6 +19,6 @@
             <RowDefinition Height="40"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="Witaj w kkVPN!" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Open Sans" FontSize="16"/>
+        <TextBlock Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="Witaj w kkVPN!" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Segoe UI" FontSize="16"/>
     </Grid>
 </Page>

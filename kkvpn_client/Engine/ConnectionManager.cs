@@ -10,12 +10,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace kkvpn_client
 {
-    public class ConnectionManager
+    class ConnectionManager : IDisposable
     {
         private const int UdpPort = 57384;
+
+        private AppSettings Settings;
 
         private Subnetwork CurrentSubnetwork;
         private uint IP;
@@ -25,6 +28,7 @@ namespace kkvpn_client
         private IEncryptionEngine Encryption;
         private DriverConnector Driver;
         private NetworkInterfaceConfiguation InterfaceConfig;
+        private KeyExchangeEngine KeyExchange;
 
         private Dictionary<UInt32, PeerData> PeersTx;
         private Dictionary<IPEndPoint, PeerData> PeersRx;
@@ -38,7 +42,11 @@ namespace kkvpn_client
         private bool AwaitingExternalConnection;
         private bool DriverStarted;
 
+        private IPEndPoint LocalEndpoint;
+
         private CancellationTokenSource cancelTokenSource;
+
+        public event EventHandler OnExternalConnected;
 
         public bool Connected
         {
@@ -54,9 +62,6 @@ namespace kkvpn_client
         {
             Stats = new Statistics();
 
-            PeersTx = new Dictionary<uint, PeerData>();
-            PeersRx = new Dictionary<IPEndPoint, PeerData>();
-
             cancelTokenSource = new CancellationTokenSource();
 
             AwaitingExternalConnection = false;
@@ -66,9 +71,17 @@ namespace kkvpn_client
 
         public void InitializeManager()
         {
+            Settings = ((App)Application.Current).Settings;
+
             Driver = new DriverConnector();
             Driver.InitializeDevice();
+
             InterfaceConfig = new NetworkInterfaceConfiguation();
+
+            Encryption = new PlainTextEngine();
+            //Encryption = new AesEngine();
+            KeyExchange = new KeyExchangeEngine(false);
+            KeyExchange.InitializeKey();
         }
 
         public Task CreateNewNetwork(string NetworkName, string UserName, uint Address, uint CIDR)
@@ -85,7 +98,7 @@ namespace kkvpn_client
                     CurrentSubnetwork = new Subnetwork() 
                     { 
                         Address = Address, 
-                        Mask = CIDR, 
+                        CIDR = CIDR, 
                         Name = NetworkName 
                     };
                     IP = Address + 1;           // pierwszy dostępny adres
@@ -130,7 +143,17 @@ namespace kkvpn_client
 
         public string GetConnectionString(string UserName)
         {
-            return "";
+            if (LocalEndpoint == null)
+            {
+                return "";
+            }
+
+            Base64PeerData peerData = new Base64PeerData(
+                UserName,
+                LocalEndpoint,
+                KeyExchange.GetPublicKey()
+                );
+            return peerData.GetBase64EncodedData();
         }
 
         public Dictionary<string, string> GetSubnetworkInfo()
@@ -142,7 +165,7 @@ namespace kkvpn_client
                 {
                     {"NetworkName", CurrentSubnetwork.Name},
                     {"Subnetwork", (new IPAddress(CurrentSubnetwork.Address.InvertBytes())).ToString()},
-                    {"Mask", (new IPAddress(CurrentSubnetwork.Mask.GetMaskFromCIDR().InvertBytes())).ToString()},
+                    {"Mask", (new IPAddress(CurrentSubnetwork.CIDR.GetMaskFromCIDR().InvertBytes())).ToString()},
                     {"IP", (new IPAddress(IP.InvertBytes())).ToString()}
                 };
         }
@@ -168,42 +191,132 @@ namespace kkvpn_client
             return stats;
         }
 
-        public void AddPeer(string ConnectionString)
+        public string GetLowestFreeIP()
+        {
+            uint[] keys = PeersTx.Keys.ToArray();
+            uint[] addresses = new uint[keys.Length + 1];
+            Array.Copy(keys, addresses, keys.Length);
+            addresses[addresses.Length - 1] = IP;
+            Array.Sort(addresses);
+
+            for (int i = 0; i < addresses.Length - 1; ++i)
+            {
+                if (addresses[i] + 1 != addresses[i + 1])
+                {
+                    if (addresses[i] + 1 != IP)
+                    {
+                        return (new IPAddress(addresses[i] + 1)).ToString();
+                    }
+                }
+            }
+
+            return (new IPAddress((addresses[addresses.Length - 1] + 1).InvertBytes())).ToString();
+        }
+
+        public void AddPeer(string ConnectionString, uint SubnetworkIP)
         {
             if (!_Connected)
             {
                 throw new InvalidOperationException("Żadne połączenie nie jest obecnie otwarte.");
+            }
+
+            if (IP == SubnetworkIP)
+            {
+                MessageBox.Show(
+                    "Wybrany adres IP jest już przypisany do innego użytkownika. Proszę wybrać inny.",
+                    "Błąd",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                    );
+                return;
+            }
+            
+            foreach (uint ip in PeersTx.Keys)
+            {
+                if (ip == SubnetworkIP)
+                {
+                    MessageBox.Show(
+                        "Wybrany adres IP jest już przypisany do innego użytkownika. Proszę wybrać inny.",
+                        "Błąd",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                        );
+                    return;
+                }
+            }
+
+            try
+            {
+                Base64PeerData peerData = Base64PeerData.GetBase64PeerData(ConnectionString);
+                PeerData peer = PeerData.GetDataFromBase64PeerData(peerData, SubnetworkIP);
+
+                InitiateNewUser(peer, SubnetworkIP);
+                AddPeerToDictionaries(peer);
+
+                NegotiateKey(peer, null);
+            }
+            catch (Exception ex)
+            {
+                throw new WrongConnectionStringException("Błędny connection string!", ex);
             }
         }
 
         public void Disconnect()
         {
-            if (!_Connected)
-            {
-                throw new InvalidOperationException("Żadne połączenie nie jest obecnie otwarte.");
-            }
-
             StopDriver();
 
             _Connected = false;
         }
 
+        public void Dispose()
+        {
+            StopDriver();
+            Driver.CloseDevice();
+        }
+
         private void StartNetworkEngine()
         {
+            Udp = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPort));
+
+            UPnPPortMapper upnp = ((App)Application.Current).UPnP;
             try
             {
-                UPnP.NAT.Discover();
-                UPnP.NAT.ForwardPort(UdpPort, ProtocolType.Udp, "kkVPN port");
-                _PortForwarded = true;
+                _PortForwarded = upnp.MapPort(UdpPort, UdpPort);
             }
-            catch (WebException)
+            catch
             {
                 _PortForwarded = false;
             }
-            
-            Udp = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPort));
+
+            if (_PortForwarded)
+            {
+                LocalEndpoint = new IPEndPoint(upnp.GetExternalIP(), UdpPort);
+            }
+            else
+            {
+                IPAddress ip = null;
+                IPAddress[] list = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+
+                foreach (IPAddress i in list)
+                {
+                    if (i.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        ip = i;
+                        break;
+                    }
+                }
+
+                LocalEndpoint = new IPEndPoint(
+                    ip?? new IPAddress(0),
+                    UdpPort
+                    );
+            }
+
+            PeersTx = new Dictionary<uint, PeerData>();
+            PeersRx = new Dictionary<IPEndPoint, PeerData>();
 
             Thread RxThread = new Thread(RxWorkerRoutine);
+            RxThread.Priority = ThreadPriority.BelowNormal;
             RxThread.Start();
 
             _Connected = true;
@@ -211,7 +324,7 @@ namespace kkvpn_client
 
         private void StartDriver(Subnetwork subnetwork, uint localIP)
         {
-            Driver.SetFilter(subnetwork.Address, subnetwork.Mask, localIP);
+            Driver.SetFilter(subnetwork.Address, subnetwork.CIDR.GetMaskFromCIDR(), localIP);
             InterfaceConfig.AddIP(localIP);
             Driver.StartReading(ProcessReceivedData);
 
@@ -247,11 +360,15 @@ namespace kkvpn_client
 
                     ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
                 }
-                catch (SocketException ex)
+                catch (Exception ex)
                 {
-                    if (ex.ErrorCode != 10060)
+                    if (ex is SocketException)
                     {
-                        throw;
+                        int code = ((SocketException)ex).ErrorCode;
+                        if (code != 10060 && code != 10004)
+                        {
+                            throw;
+                        }
                     }
                 }
             }
@@ -268,8 +385,11 @@ namespace kkvpn_client
                 if (PeersRx.TryGetValue(ep, out peer))
                 {
                     UdpEncryptedPacket dataPacket = (UdpEncryptedPacket)packet;
-                    byte[] data = Encryption.Decrypt(dataPacket.Data, peer.AesKey);
+                    byte[] data = Encryption.Decrypt(dataPacket.Data, peer.KeyIndex);
                     Driver.WriteData(data);
+
+                    Stats.DLBytes += (ulong)data.Length;
+                    Stats.DLPackets++;
                 }
             }
             else if (packet is UdpKeyNegotiationPacket)
@@ -279,19 +399,42 @@ namespace kkvpn_client
             else if (packet is UdpNewPeerPacket)
             {
                 UdpNewPeerPacket newPeerPacket = packet as UdpNewPeerPacket;
-                if (newPeerPacket.RecipiantIsNew)
+                if (newPeerPacket.RecipiantIsNew && AwaitingExternalConnection)
                 {
                     CurrentSubnetwork = newPeerPacket.SubnetworkData;
                     IP = newPeerPacket.SubnetworkIP;
 
-                    StartNetworkEngine();
+                    foreach (PeerData p in newPeerPacket.Peers)
+                    {
+                        AddPeerToDictionaries(p);
+                    }
+
+                    Stats.Peers = PeersRx.Count();
                     StartDriver(CurrentSubnetwork, IP);
+                    OnExternalConnected(null, null);
+
+                    AwaitingExternalConnection = false;
                 }
                 else
                 {
-                    NegotiateKey(peer, null);
+                    if (newPeerPacket.Peers != null)
+                    {
+                        if (newPeerPacket.Peers.Length != 0)
+                        {
+                            AddPeerToDictionaries(newPeerPacket.Peers[0]);
+                            Stats.Peers = PeersRx.Count();
+
+                            NegotiateKey(peer, null);
+                        }
+                    }
                 }
             }
+        }
+
+        private void AddPeerToDictionaries(PeerData peer)
+        {
+            PeersRx.Add(peer.GetEndpoint(), peer);
+            PeersTx.Add(peer.SubnetworkIP, peer);
         }
 
         private void ProcessReceivedData(byte[] data)
@@ -302,22 +445,58 @@ namespace kkvpn_client
             if (PeersTx.TryGetValue(sendTo, out peer))
             {
                 UdpEncryptedPacket packet =
-                    new UdpEncryptedPacket(0, Encryption.Encrypt(data, peer.AesKey));
+                    new UdpEncryptedPacket(0, Encryption.Encrypt(data, peer.KeyIndex));
                 data = GetSerializedBytes<UdpEncryptedPacket>(packet);
                 Udp.Send(data, data.Length, peer.GetEndpoint());
+
+                Stats.ULBytes += (ulong)data.Length;
+                Stats.ULPackets++;
             }
         }
 
-        private void NegotiateKey(PeerData Peer, UdpKeyNegotiationPacket packet)
+        private void InitiateNewUser(PeerData peer, uint SubnetworkIP)
         {
-            if (packet == null)
-            {
+            // pakiet dla nowego użytkownika
+            UdpNewPeerPacket packet = new UdpNewPeerPacket(
+                peer.Name,
+                SubnetworkIP,
+                true,
+                PeersRx.Values.ToArray(),
+                CurrentSubnetwork
+                );
+            byte[] data = GetSerializedBytes<UdpNewPeerPacket>(packet);
+            Udp.Send(data, data.Length, peer.GetEndpoint());
 
-            }
-            else
-            {
+            // pakiet dla pozostałych
+            packet = new UdpNewPeerPacket(
+                peer.Name,
+                SubnetworkIP,
+                false,
+                new PeerData[1] {peer},
+                null
+                );
+            data = GetSerializedBytes<UdpNewPeerPacket>(packet);
 
+            foreach (PeerData p in PeersRx.Values)
+            {
+                Udp.Send(data, data.Length, p.GetEndpoint());
             }
+        }
+
+        private void NegotiateKey(PeerData peer, UdpKeyNegotiationPacket packet)
+        {
+            if (packet != null)
+            {
+                Encryption.DeleteKeyIfInStore(peer.KeyIndex);
+                peer.KeyIndex = Encryption.AddKeyToStore(KeyExchange.GetDerivedKey(packet.KeyMaterial, peer.PublicKey));
+            }
+
+            UdpKeyNegotiationPacket negoPacket = new UdpKeyNegotiationPacket(
+                    KeyExchange.GetKeyMaterial()
+                    );
+
+            byte[] data = GetSerializedBytes<UdpKeyNegotiationPacket>(negoPacket);
+            Udp.Send(data, data.Length, peer.GetEndpoint());
         }
 
         private byte[] GetSerializedBytes<T>(T Obj)
@@ -334,7 +513,7 @@ namespace kkvpn_client
         }
     }
 
-    public class Statistics
+    class Statistics
     {
         public double DLSpeed;
         public double ULSpeed;
@@ -345,12 +524,12 @@ namespace kkvpn_client
         public int Peers;
     }
 
-    public class WrongConnectionStringException : Exception
+    class WrongConnectionStringException : Exception
     {
-        public WrongConnectionStringException(string message)
-            : base(message)
+        public WrongConnectionStringException(string message, Exception innerException)
+            : base(message, innerException)
         {
-
+           
         }
     }
 }

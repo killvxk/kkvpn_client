@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace kkvpn_client.Communication
 {
     [ProtoContract]
-    public class UdpNewPeerPacket : CommPacket
+    class UdpNewPeerPacket : CommPacket
     {
         [ProtoMember(1)]
         public string Name;
@@ -21,9 +21,25 @@ namespace kkvpn_client.Communication
         public PeerData[] Peers;
         [ProtoMember(5)]
         public Subnetwork SubnetworkData;
-        [ProtoMember(6)]
-        public IPEndPoint Endpoint;
 
-        public UdpNewPeerPacket() { }
+        public UdpNewPeerPacket()
+        {
+
+        }
+
+        public UdpNewPeerPacket(
+            string Name,
+            uint SubnetworkIP,
+            bool RecipiantIsNew,
+            PeerData[] Peers,
+            Subnetwork SubnetworkData
+            ) 
+        {
+            this.Name = Name;
+            this.SubnetworkIP = SubnetworkIP;
+            this.RecipiantIsNew = RecipiantIsNew;
+            this.Peers = Peers;
+            this.SubnetworkData = SubnetworkData;
+        }
     }
 }
