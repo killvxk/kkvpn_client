@@ -9,18 +9,18 @@ namespace kkvpn_client
 {
     class KeyExchangeEngine
     {
-        private ECDiffieHellmanCng DiffieHellman;
-        private RSACryptoServiceProvider RSA;
-        private byte[] KeyMaterial;
-        private byte[] PublicKey;
-        private bool OAEP;
+        private int DSAKeySize = 1024;
 
-        public KeyExchangeEngine(bool OAEP)
+        private ECDiffieHellmanCng DiffieHellman;
+        private DSACryptoServiceProvider DSA;
+        private byte[] KeyMaterial;
+        private byte[] DSASignature;
+        private byte[] PublicKey;
+
+        public KeyExchangeEngine()
         {
             DiffieHellman = new ECDiffieHellmanCng(256);
-            RSA = new RSACryptoServiceProvider(1024);
-
-            this.OAEP = OAEP;
+            DSA = new DSACryptoServiceProvider(DSAKeySize);
         }
 
         public void InitializeKey()
@@ -34,8 +34,9 @@ namespace kkvpn_client
             RNG.GetBytes(Seed);
             DiffieHellman.Seed = Seed;
 
-            PublicKey = RSA.ExportCspBlob(false);
-            KeyMaterial = RSA.Encrypt(DiffieHellman.PublicKey.ToByteArray(), OAEP);
+            PublicKey = DSA.ExportCspBlob(false);
+            KeyMaterial = DiffieHellman.PublicKey.ToByteArray();
+            DSASignature = DSA.SignData(KeyMaterial);
         }
 
         public byte[] GetKeyMaterial()
@@ -43,19 +44,25 @@ namespace kkvpn_client
             return KeyMaterial;
         }
 
-        public byte[] GetDerivedKey(byte[] Material, byte[] PublicKey)
+        public byte[] GetDSASignature()
         {
-            byte[] MaterialDecrypted;
+            return DSASignature;
+        }
 
-            RSAParameters Params = new RSAParameters();
-            Params.P = PublicKey;
-
-            RSA.ImportParameters(Params);
-            MaterialDecrypted = RSA.Decrypt(Material, OAEP);
+        public byte[] GetDerivedKey(byte[] Material, byte[] Signature, byte[] PublicKey)
+        {
+            using (DSACryptoServiceProvider verifyDSA = new DSACryptoServiceProvider())
+            {
+                verifyDSA.ImportCspBlob(PublicKey);
+                if (!verifyDSA.VerifyData(Material, Signature))
+                {
+                    return null;
+                }
+            }
 
             return DiffieHellman.DeriveKeyMaterial(
                 ECDiffieHellmanCngPublicKey.FromByteArray(
-                    MaterialDecrypted, 
+                    Material, 
                     CngKeyBlobFormat.EccPublicBlob
                     )
                 );
@@ -69,7 +76,7 @@ namespace kkvpn_client
         private void ReadRSAKey(string File)
         {
             TextReader textReader = new StreamReader(File);
-            RSA.FromXmlString(textReader.ReadToEnd());
+            DSA.FromXmlString(textReader.ReadToEnd());
             textReader.Close();
         }
     }

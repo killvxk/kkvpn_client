@@ -16,16 +16,22 @@ using System.Windows.Shapes;
 namespace kkvpn_client.Screens
 {
     /// <summary>
-    /// Interaction logic for pageWelcome.xaml
+    /// Interaction logic for PageHelp3.xaml
     /// </summary>
-    public partial class PageWelcome : Page
+    public partial class PageHelp3 : Page
     {
+        private const string NextPage = "help4";
         private MainWindow ParentWindow;
 
-        public PageWelcome(MainWindow ParentWindow)
+        public PageHelp3(MainWindow ParentWindow)
         {
             this.ParentWindow = ParentWindow;
             InitializeComponent();
+        }
+
+        private void btnForward_Click(object sender, RoutedEventArgs e)
+        {
+            ParentWindow.NavigateTo(NextPage);
         }
     }
 }

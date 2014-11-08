@@ -63,12 +63,13 @@ namespace kkvpn_client
                     Settings.SaveToFile();
                 }
 
+                MiscFunctions.SetIESoundsEnabled(false);
                 UPnP = new UPnPPortMapper();
                 Connection.InitializeManager();
             }
             catch (Exception ex)
             {
-                if (ex is InvalidOperationException || ex is Win32ErrorException)
+                if (ex is Win32ErrorException)
                 {
                     MessageBox.Show(
                         "Nie udało się połączyć ze sterownikiem VPN! Proszę sprawdzić, czy został on prawidłowo zainstalowany!", 
@@ -78,6 +79,10 @@ namespace kkvpn_client
                         );
                     InitFail = true;
                     this.Shutdown(1);
+                }
+                else
+                {
+                    throw;
                 }
             }
         }

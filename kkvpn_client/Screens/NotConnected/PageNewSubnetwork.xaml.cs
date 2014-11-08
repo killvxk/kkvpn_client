@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -53,7 +54,7 @@ namespace kkvpn_client.Screens
                 return;
             }
 
-            uint count = (uint)((1 << (32 - (int)iudCIDR.Value)) - 2);
+            uint count = (uint)((1 << (32 - (int)(iudCIDR.Value?? 24))) - 2);
             uint enteredIP = tbAddress.Text.IPToInt().InvertBytes();
             uint mask = (((uint)(iudCIDR.Value?? 24)).GetMaskFromCIDR()).InvertBytes();
 
@@ -79,6 +80,7 @@ namespace kkvpn_client.Screens
             try
             {
                 ParentWindow.NavigateTo("wait");
+                ParentWindow.ChangeAddPeerMenuItemTarget("addpeer");
                 ParentWindow.ShowMenu(false);
 
                 await Connection.CreateNewNetwork(
@@ -86,13 +88,24 @@ namespace kkvpn_client.Screens
                     tbPeerName.Text,
                     tbAddress.Text.IPToInt(),
                     (uint)iudCIDR.Value);
-
-                ParentWindow.ShowMenu(true);
-                ParentWindow.NavigateTo("status");
-                ParentWindow.SetConnected(true);
+            }
+            catch (OperationCanceledException)
+            {
+                Connection.Disconnect();
+            }
+            catch (SocketException ex)
+            {
+                MessageBox.Show(
+                    "Błąd połączenia: " + ex.Message,
+                    "Błąd",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                    );
+                Connection.Disconnect();
             }
             catch (Exception ex)
             {
+                Connection.Disconnect();
                 MessageBox.Show("Otwarcie nowej sieci niemożliwe: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
                 App.LogException(ex);
 

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using kkvpn_client.Communication;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,11 +23,31 @@ namespace kkvpn_client.Screens
     public partial class PagePeers : Page
     {
         private MainWindow ParentWindow;
+        private ConnectionManager Connection;
 
         public PagePeers(MainWindow ParentWindow)
         {
             this.ParentWindow = ParentWindow;
+            this.Connection = ((App)Application.Current).Connection;
             InitializeComponent();
+
+            Connection.OnPeerListChanged += Connection_OnPeerListChanged;
+        }
+
+        private void RefreshPeerList(PeerData[] Peers)
+        {
+            lvPeerList.Items.Clear();
+            foreach (PeerData peer in Peers)
+            {
+                lvPeerList.Items.Add(peer);
+            }
+        }
+
+        void Connection_OnPeerListChanged(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() => { 
+                RefreshPeerList(((PeerListChangedEventArgs)e).Peers);
+                });
         }
     }
 }

@@ -22,6 +22,7 @@ namespace kkvpn_client
 
             Aes.KeySize = 256;
             Aes.BlockSize = 128;
+            Aes.Padding = PaddingMode.ISO10126;
             MemoryStreamEncrypt = new MemoryStream();
             MemoryStreamDecrypt = new MemoryStream();
             CryptoStreamEncrypt = new Dictionary<int, CryptoStream>();
@@ -32,28 +33,41 @@ namespace kkvpn_client
             return true;
         }
 
-        public byte[] Encrypt(byte[] data, int key)
+        public byte[] Encrypt(byte[] data, int? key)
         {
-            CryptoStream stream = CryptoStreamEncrypt[key];
+            if (key == null)
+            {
+                return null;
+            }
+            CryptoStream stream = CryptoStreamEncrypt[key ?? -1];
 
-            stream.Flush();
             stream.Write(data, 0, data.Length);
+            stream.Flush();
 
             return MemoryStreamEncrypt.ToArray();
         }
 
-        public byte[] Decrypt(byte[] data, int key)
+        public byte[] Decrypt(byte[] data, int? key)
         {
-            CryptoStream stream = CryptoStreamDecrypt[key];
+            if (key == null)
+            {
+                return null;
+            }
+            CryptoStream stream = CryptoStreamDecrypt[key ?? -1];
 
-            stream.Flush();
             stream.Write(data, 0, data.Length);
+            stream.Flush();
 
             return MemoryStreamDecrypt.ToArray();
         }
 
         public int AddKeyToStore(byte[] key)
         {
+            if (key == null)
+            {
+                return -1;
+            }
+
             int dictKey = key.GetHashCode();
 
             CryptoStreamEncrypt.Add(dictKey, new CryptoStream(MemoryStreamEncrypt, Aes.CreateEncryptor(), CryptoStreamMode.Write));
@@ -62,16 +76,21 @@ namespace kkvpn_client
             return dictKey;
         }
 
-        public void DeleteKeyIfInStore(int key)
+        public void DeleteKeyIfInStore(int? key)
         {
-            if (CryptoStreamEncrypt.ContainsKey(key))
+            if (key == null)
             {
-                CryptoStreamEncrypt.Remove(key);
+                return;
             }
 
-            if (CryptoStreamDecrypt.ContainsKey(key))
+            if (CryptoStreamEncrypt.ContainsKey(key ?? -1))
             {
-                CryptoStreamDecrypt.Remove(key);
+                CryptoStreamEncrypt.Remove(key ?? -1);
+            }
+
+            if (CryptoStreamDecrypt.ContainsKey(key ?? -1))
+            {
+                CryptoStreamDecrypt.Remove(key ?? -1);
             }
         }
     }

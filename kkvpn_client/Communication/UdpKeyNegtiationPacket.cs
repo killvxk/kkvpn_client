@@ -11,14 +11,17 @@ namespace kkvpn_client.Communication
     {
         [ProtoMember(1)]
         public byte[] KeyMaterial;
+        [ProtoMember(2)]
+        public byte[] DSASignature;
 
         public UdpKeyNegotiationPacket() { }
 
-        public UdpKeyNegotiationPacket(byte[] KeyMaterial)
+        public UdpKeyNegotiationPacket(byte[] KeyMaterial, byte[] DSASignature)
         {
-            this.PacketID = Constants._UdpKeyNegotiationPacket;
+            this.PacketID = Constants._TcpKeyNegotiationPacket;
 
             this.KeyMaterial = KeyMaterial;
+            this.DSASignature = DSASignature;
         }
     }
 }

@@ -45,8 +45,17 @@ namespace kkvpn_client.Screens
 
         private void tbPeerName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Settings.UserName = tbPeerName.Text;
-            tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
+            if (tbPeerName.Text != "")
+            {
+                Settings.UserName = tbPeerName.Text;
+                tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
+            }
+            else
+            {
+                tbConnectionString.Text = "(wpisz nazwę użytkownika)";
+            }
+
+            btnCopyToClipboard.IsEnabled = (tbPeerName.Text != "");
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -57,6 +66,10 @@ namespace kkvpn_client.Screens
                 await Connection.OpenForConnection();
                 tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
                 lblPort.Text = "Port otwarty, oczekiwanie na połączenie.";
+            }
+            catch (OperationCanceledException) 
+            {
+                Connection.Disconnect();
             }
             catch (Exception ex)
             {

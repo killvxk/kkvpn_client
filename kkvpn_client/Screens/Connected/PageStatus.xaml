@@ -21,7 +21,7 @@
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,6,0,0" TextWrapping="Wrap" Text="Mój adres IP:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="69"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,27,0,0" TextWrapping="Wrap" Text="Podsieć:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="69"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,48,0,0" TextWrapping="Wrap" Text="Maska podsieci:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="84"/>
-        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,88,0,0" TextWrapping="Wrap" Text="Liczba połączeń:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="110"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,88,0,0" TextWrapping="Wrap" Text="Liczba użytkowników:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="132"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,128,0,0" TextWrapping="Wrap" Text="Prędkość pobierania:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,149,0,0" TextWrapping="Wrap" Text="Prędkość wysyłania:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,189,0,0" TextWrapping="Wrap" Text="Odebrano bajtów:" VerticalAlignment="Top" Grid.Row="1" Height="16" Width="144"/>

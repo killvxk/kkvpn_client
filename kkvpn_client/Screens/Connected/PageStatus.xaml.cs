@@ -65,7 +65,7 @@ namespace kkvpn_client.Screens
                 {
                     Statistics stats = Connection.GetOverallStatistics();
 
-                    lblPeers.Text = stats.Peers.ToString();
+                    lblPeers.Text = Connection.GetPeerCount().ToString();
 
                     lblDLSpeed.Text = stats.DLSpeed.ToString("0.00") + " kb/s";
                     lblULSpeed.Text = stats.ULSpeed.ToString("0.00") + " kb/s";

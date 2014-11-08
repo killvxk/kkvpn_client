@@ -24,6 +24,7 @@
             <sa:MenuButton Height="40" x:Name="btnWelcome" Text="Witaj!" Image="\\KAJTEK-DESKTOP\Debug\icons\home.png" IsChecked="True" Click="btnMenuButton_Click" Tag="welcome"/>
             <sa:MenuButton Height="40" x:Name="btnConnect" Text="Połączenie" Image="\\KAJTEK-DESKTOP\Debug\icons\connect.png" Click="btnMenuButton_Click" Tag="connection"/>
             <sa:MenuButton Height="40" x:Name="btnSettings" Text="Ustawienia" Image="\\KAJTEK-DESKTOP\Debug\icons\settings.png" Click="btnMenuButton_Click" Tag="settings"/>
+            <sa:MenuButton Height="40" x:Name="btnHelp" Text="Pomoc" Image="\\KAJTEK-DESKTOP\Debug\icons\help.png" Click="btnMenuButton_Click" Tag="help"/>
             <sa:MenuButton Height="40" x:Name="btnStatus" Text="Status" Image="\\KAJTEK-DESKTOP\Debug\icons\status.png" Click="btnMenuButton_Click" Tag="status" Visibility="Collapsed"/>
             <sa:MenuButton Height="40" x:Name="btnPeers" Text="Połączenia" Image="\\KAJTEK-DESKTOP\Debug\icons\peers.png" Click="btnMenuButton_Click" Tag="peers" Visibility="Collapsed"/>
             <sa:MenuButton Height="40" x:Name="btnAddPeer" Text="Dodaj połączenie" Image="\\KAJTEK-DESKTOP\Debug\icons\add_peer.png" Click="btnMenuButton_Click" Tag="addpeer" Visibility="Collapsed"/>

@@ -107,8 +107,10 @@ namespace kkvpn_client.Engine
         #endregion Unmanaged code imports
 
         public delegate void ProcessData(byte[] data);
-        private ProcessData Processor;
-        private bool isStopping;
+        private ProcessData DriverDataExternalProcessor;
+        private bool IsStopping;
+
+        private uint Local;
 
         private SafeFileHandle Device;
         private const string DeviceName = "\\\\.\\kkdrv";
@@ -117,8 +119,8 @@ namespace kkvpn_client.Engine
         private const string DriverFilename = "C:\\DriverTest\\Drivers\\kkdrv.sys";
 
         private IntPtr ReadBuffer;
-        NativeOverlapped* ReadOverlapped;
-        NativeOverlapped* WriteOverlapped;
+        private NativeOverlapped* ReadOverlapped;
+        private NativeOverlapped* WriteOverlapped;        
 
         public DriverConnector() {}
 
@@ -158,7 +160,7 @@ namespace kkvpn_client.Engine
             }
         }
 
-        public void SetFilter(uint Subnetwork, uint Mask, uint Local)
+        public void SetFilter(uint subnetwork, uint mask, uint local)
         {
             if (Device.IsClosed || Device.IsInvalid)
             {
@@ -169,9 +171,10 @@ namespace kkvpn_client.Engine
 
             KKDRV_FILTER_DATA FilterData;
 
-            FilterData.low = Subnetwork + 1;
-            FilterData.high = Subnetwork + (~Mask) - 1;
-            FilterData.local = Local;
+            FilterData.low = (subnetwork + 1);
+            FilterData.high = (subnetwork + (~mask) - 1);
+            FilterData.local = 0;
+            Local = local.InvertBytes();
 
             if (!DeviceIoControl(
                     hDevice: Device,
@@ -238,8 +241,8 @@ namespace kkvpn_client.Engine
 
         unsafe public void StartReading(ProcessData processor)
         {
-            isStopping = false;
-            this.Processor = processor;
+            IsStopping = false;
+            this.DriverDataExternalProcessor = processor;
 
             if (Device.IsClosed || Device.IsInvalid)
             {
@@ -260,7 +263,7 @@ namespace kkvpn_client.Engine
 
         public void StopReading()
         {
-            isStopping = true;
+            IsStopping = true;
         }
 
         unsafe public void ReadData()
@@ -286,28 +289,43 @@ namespace kkvpn_client.Engine
         unsafe void ReadCompletionCallback(uint errorCode, uint bytesRead, NativeOverlapped* nativeOverlapped)
         {
             const int packetLengthHeaderOffset = 0x2;
+            const int packetDestinationHostOffset = 0x10;
 
             try 
             {
-                if (errorCode == 0 && Processor != null)
+                if (errorCode == 0 && DriverDataExternalProcessor != null)
                 {
                     uint totalLength = (uint)bytesRead;
                     int offset = 0;
-                    ushort packetLength = (ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset);
+                    ushort packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset)).InvertBytes();
 
-                    while (offset <= totalLength)
+                    while (packetLength > 0)
                     {
                         byte[] temp = new byte[packetLength];
                         Marshal.Copy(ReadBuffer + offset, temp, 0, packetLength);
 
-                        Processor(temp);
+                        if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
+                        {
+                            WriteData(temp);
+                        }
+                        else
+                        {
+                            DriverDataExternalProcessor(temp);
+                        }
 
                         offset += packetLength;
-                        packetLength = (ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset);
+                        if (offset < totalLength)
+                        {
+                            packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset)).InvertBytes();
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
 
-                if (!isStopping)
+                if (!IsStopping)
                 {
                     ReadData();
                 }
@@ -319,25 +337,25 @@ namespace kkvpn_client.Engine
             }
         }
 
-        public void WriteData(byte[] Data)
+        public void WriteData(byte[] data)
         {
             if (Device != null)
             {
                 uint bytesWritten = 0;
                 Overlapped overlapped = new Overlapped();
-                WriteOverlapped = overlapped.Pack(WriteCompletionCallback, null);
+                WriteOverlapped = overlapped.Pack(WriteDeviceIOCompletionCallback, null);
 
                 WriteFile(
                     Device,
-                    Data,
-                    (uint)Data.Length,
+                    data,
+                    (uint)data.Length,
                     ref bytesWritten,
                     WriteOverlapped
                     );  
             }
         }
 
-        unsafe void WriteCompletionCallback(uint errorCode, uint bytesWritten, NativeOverlapped* nativeOverlapped)
+        unsafe void WriteDeviceIOCompletionCallback(uint errorCode, uint bytesWritten, NativeOverlapped* nativeOverlapped)
         {
             try
             {

@@ -12,8 +12,8 @@ namespace kkvpn_client.Communication
         #region Packet IDs
 
         public const byte _UdpEncryptedPacket = 1;
-        public const byte _UdpKeyNegotiationPacket = 2;
-        public const byte _UdpNewPeerPacket = 3;
+        public const byte _TcpKeyNegotiationPacket = 2;
+        public const byte _TcpNewPeerPacket = 3;
 
         #endregion Packet IDs
     }

@@ -32,6 +32,7 @@ namespace kkvpn_client.Screens
 
         private void btnDisconnect_Click(object sender, RoutedEventArgs e)
         {
+            Connection.CancelCurrentOperation();
             Connection.Disconnect();
 
             ParentWindow.NavigateTo("welcome");

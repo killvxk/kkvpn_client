@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ProtoBuf;
 using System.Net;
+using System.Net.Sockets;
 
 namespace kkvpn_client.Communication
 {
@@ -21,10 +22,24 @@ namespace kkvpn_client.Communication
         [ProtoMember(5)]
         public byte[] PublicKey;
 
-        public int KeyIndex;
-        //public bool KeyExchangeInProgress;
+        public int? KeyIndex;
+        public Statistics Stats;
+        public bool KeyExchangeInProgress;
 
-        public PeerData() { }
+        public string PeerName
+        {
+            get { return Name; }
+        }
+
+        public string SubnetworkIPstring
+        {
+            get { return (new IPAddress((long)SubnetworkIP.InvertBytes())).ToString(); }
+        }
+
+        public PeerData() 
+        {
+            this.Stats = new Statistics();
+        }
 
         public PeerData(
             string Name,
@@ -33,15 +48,16 @@ namespace kkvpn_client.Communication
             int Port,
             byte[] PublicKey
             )
+            : this()
         {
             this.Name = Name;
             this.SubnetworkIP = SubnetworkIP;
             this.IP = IP;
             this.Port = Port;
             this.PublicKey = PublicKey;
-            //this.KeyExchangeInProgress = false;
+            this.KeyExchangeInProgress = false;
 
-            this.KeyIndex = 0;
+            this.KeyIndex = null;
         }
 
         public IPEndPoint GetEndpoint()

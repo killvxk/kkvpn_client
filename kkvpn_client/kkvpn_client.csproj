@@ -76,6 +76,7 @@
     <Compile Include="Communication\CommPacket.cs" />
     <Compile Include="Communication\Constants.cs" />
     <Compile Include="Communication\PeerData.cs" />
+    <Compile Include="Communication\UdpConnectingConfirmation.cs" />
     <Compile Include="Communication\UdpEncryptedPacket.cs" />
     <Compile Include="Communication\UdpKeyNegtiationPacket.cs" />
     <Compile Include="Communication\UdpNewPeerPacket.cs" />
@@ -83,41 +84,58 @@
     <Compile Include="Encryption\IEncryptionEngine.cs" />
     <Compile Include="Encryption\KeyExchangeEngine.cs" />
     <Compile Include="Encryption\PlainTextEngine.cs" />
+    <Compile Include="Engine\AddedPeerEventHandler.cs" />
     <Compile Include="Engine\ConnectionManager.cs" />
     <Compile Include="Engine\DriverConnector.cs" />
     <Compile Include="Engine\DriverSystemCheck.cs" />
     <Compile Include="Engine\MiscFunctions.cs" />
     <Compile Include="Engine\NetworkInterfaceConfiguation.cs" />
     <Compile Include="Communication\Subnetwork.cs" />
+    <Compile Include="Communication\Statistics.cs" />
     <Compile Include="Engine\UPnP.cs" />
-    <Compile Include="Screens\PageAddPeer.xaml.cs">
+    <Compile Include="Screens\Connected\PageAddingPeerFailed.xaml.cs">
+      <DependentUpon>PageAddingPeerFailed.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\Connected\PageAddPeer.xaml.cs">
       <DependentUpon>PageAddPeer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageConnection.xaml.cs">
+    <Compile Include="Screens\NotConnected\PageConnection.xaml.cs">
       <DependentUpon>PageConnection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageConnectToExisting.xaml.cs">
+    <Compile Include="Screens\NotConnected\PageConnectToExisting.xaml.cs">
       <DependentUpon>PageConnectToExisting.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageDisconnect.xaml.cs">
+    <Compile Include="Screens\Connected\PageDisconnect.xaml.cs">
       <DependentUpon>PageDisconnect.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageNewSubnetwork.xaml.cs">
+    <Compile Include="Screens\NotConnected\Help\PageHelp1.xaml.cs">
+      <DependentUpon>PageHelp1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\NotConnected\Help\PageHelp2.xaml.cs">
+      <DependentUpon>PageHelp2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\NotConnected\Help\PageHelp3.xaml.cs">
+      <DependentUpon>PageHelp3.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\NotConnected\Help\PageHelp4.xaml.cs">
+      <DependentUpon>PageHelp4.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\NotConnected\PageNewSubnetwork.xaml.cs">
       <DependentUpon>PageNewSubnetwork.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PagePeers.xaml.cs">
+    <Compile Include="Screens\Connected\PagePeers.xaml.cs">
       <DependentUpon>PagePeers.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageSettings.xaml.cs">
+    <Compile Include="Screens\NotConnected\PageSettings.xaml.cs">
       <DependentUpon>PageSettings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageStatus.xaml.cs">
+    <Compile Include="Screens\Connected\PageStatus.xaml.cs">
       <DependentUpon>PageStatus.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageWait.xaml.cs">
+    <Compile Include="Screens\NotConnected\PageWait.xaml.cs">
       <DependentUpon>PageWait.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\PageWelcome.xaml.cs">
+    <Compile Include="Screens\NotConnected\PageWelcome.xaml.cs">
       <DependentUpon>PageWelcome.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
@@ -132,43 +150,63 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Screens\PageAddPeer.xaml">
+    <Page Include="Screens\Connected\PageAddingPeerFailed.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageConnection.xaml">
+    <Page Include="Screens\Connected\PageAddPeer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageConnectToExisting.xaml">
+    <Page Include="Screens\NotConnected\PageConnection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageDisconnect.xaml">
+    <Page Include="Screens\NotConnected\PageConnectToExisting.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageNewSubnetwork.xaml">
+    <Page Include="Screens\Connected\PageDisconnect.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PagePeers.xaml">
+    <Page Include="Screens\NotConnected\Help\PageHelp1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageSettings.xaml">
+    <Page Include="Screens\NotConnected\Help\PageHelp2.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageStatus.xaml">
+    <Page Include="Screens\NotConnected\Help\PageHelp3.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageWait.xaml">
+    <Page Include="Screens\NotConnected\Help\PageHelp4.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\PageWelcome.xaml">
+    <Page Include="Screens\NotConnected\PageNewSubnetwork.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\Connected\PagePeers.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\NotConnected\PageSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\Connected\PageStatus.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\NotConnected\PageWait.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\NotConnected\PageWelcome.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

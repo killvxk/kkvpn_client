@@ -10,6 +10,7 @@ namespace kkvpn_client.Communication
     [ProtoInclude(101, typeof(UdpEncryptedPacket))]
     [ProtoInclude(102, typeof(UdpKeyNegotiationPacket))]
     [ProtoInclude(103, typeof(UdpNewPeerPacket))]
+    [ProtoInclude(104, typeof(UdpConnectingConfirmation))]
     class CommPacket
     {
         [ProtoMember(1)]

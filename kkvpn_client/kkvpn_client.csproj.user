@@ -4,6 +4,7 @@
     <StartAction>Program</StartAction>
     <StartProgram>\\KAJTEK-DESKTOP\Debug\kkvpn_client.exe</StartProgram>
     <RemoteDebugEnabled>true</RemoteDebugEnabled>
-    <RemoteDebugMachine>drvdbg2</RemoteDebugMachine>
+    <RemoteDebugMachine>drvdbg</RemoteDebugMachine>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
 </Project>

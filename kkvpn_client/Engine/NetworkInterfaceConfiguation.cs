@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -7,6 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace kkvpn_client
 {
@@ -49,20 +52,15 @@ namespace kkvpn_client
             NTEInstance = 0;
         }
 
-        public void AddIP(UInt32 IP)
+        public void AddIP(uint ip, uint mask)
         {
-            if (CheckForExistingEntry(IP))
+            if (CheckForExistingEntry(ip))
             {
                 return;
             }
 
-            if (NTEContext != 0)
-            {
-                DeleteIPAddress(NTEContext);
-            }
-
+            DeleteIP();
             int InterfaceTableSize = 0;
-
             IntPtr mem = IntPtr.Zero;
 
             if (GetIpAddrTable(mem, ref InterfaceTableSize, 0) == ERROR_INSUFFICIENT_BUFFER)
@@ -78,11 +76,9 @@ namespace kkvpn_client
                 uint index = BitConverter.ToUInt32(data, 8);      // get interface number
                 Marshal.FreeHGlobal(mem);
 
-                uint hostIP = IP.InvertBytes();
-
                 int retVal = AddIPAddress(
-                    hostIP,
-                    0xFFFFFF,
+                    ip.InvertBytes(),
+                    mask.InvertBytes(),
                     index,
                     ref NTEContext,
                     ref NTEInstance
@@ -96,20 +92,46 @@ namespace kkvpn_client
                         "Upewnij się, że program został uruchomiony z uprawnieniami administratora"
                         );
                 }
+                SaveNTEContext(NTEContext);
+
+                uint subnetworkAddress = ip & mask;
+
+                Process process = new Process();
+                ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+                process.StartInfo = startInfo;
+
+                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                startInfo.FileName = "route";
+
+                startInfo.Arguments = "delete " + (new IPAddress((long)subnetworkAddress.InvertBytes())).ToString();
+                process.Start();
+                process.WaitForExit(1000);
+
+                startInfo.Arguments = "delete " + (new IPAddress((long)ip.InvertBytes())).ToString();
+                process.Start();
+                process.WaitForExit(1000);
             }
             else
             {
                 throw new InterfaceConfigurationException(
-                        0,
-                        "Nie powiodło się ustawienie nowego adresu IP w domyślnym interfejsie!"
-                        );
+                    0,
+                    "Nie powiodło się ustawienie nowego adresu IP w domyślnym interfejsie!"
+                    );
             }
                 
         }
 
         public void DeleteIP()
         {
-            DeleteIPAddress(NTEContext);
+            if (NTEContext != 0)
+            {
+                DeleteIPAddress(NTEContext);
+            }
+            else
+            {
+                DeleteIPAddress(GetSavedNTEContext());
+                SaveNTEContext(0);
+            }
         }
 
         private bool CheckForExistingEntry(uint IP)
@@ -121,11 +143,31 @@ namespace kkvpn_client
                 if (ip.AddressFamily.ToString() == "InterNetwork")
                 {
                     if (BitConverter.ToUInt32(ip.GetAddressBytes(), 0) == InvertedIP)
+                    {
                         return true;
+                    }
                 }
             }
 
             return false;
+        }
+
+        private uint GetSavedNTEContext()
+        {
+            RegistryKey reg = Registry.LocalMachine.OpenSubKey("SOFTWARE\\kkVPN");
+            if (reg == null)
+            {
+                return 0;
+            }
+
+            return uint.Parse((string)reg.GetValue("NTEContext", 0));
+        }
+
+        private void SaveNTEContext(uint value)
+        {
+            RegistryKey reg = Registry.LocalMachine.CreateSubKey("SOFTWARE\\kkVPN");
+
+            reg.SetValue("NTEContext", value);
         }
     }
 

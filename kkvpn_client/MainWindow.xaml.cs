@@ -21,6 +21,7 @@ namespace kkvpn_client
     /// </summary>
     public partial class MainWindow : Window
     {
+        private ConnectionManager Connection;
         private Dictionary<string, Page> pages;
         private bool Connected;
 
@@ -37,9 +38,16 @@ namespace kkvpn_client
                 {"addpeer", new Screens.PageAddPeer(this)},
                 {"peers", new Screens.PagePeers(this)},
                 {"disconnect", new Screens.PageDisconnect(this)},
-                {"wait", new Screens.PageWait(this)}
+                {"wait", new Screens.PageWait(this)},
+                {"help", new Screens.PageHelp1(this)},
+                {"help2", new Screens.PageHelp2(this)},
+                {"help3", new Screens.PageHelp3(this)},
+                {"help4", new Screens.PageHelp4(this)},
+                {"addingpeerfailed", new Screens.PageAddingPeerFailed(this)}
             };
             Connected = false;
+
+            Connection = ((App)Application.Current).Connection;
 
             InitializeComponent();
         }
@@ -60,17 +68,24 @@ namespace kkvpn_client
             btnConnect.Tag = NavigateTo;
         }
 
+        public void ChangeAddPeerMenuItemTarget(string NavigateTo)
+        {
+            btnAddPeer.Tag = NavigateTo;
+        }
+
         public void SetVisibilityWelcomeAndSettings(bool Visible)
         {
             if (Visible)
             {
                 btnWelcome.Visibility = Visibility.Visible;
                 btnSettings.Visibility = Visibility.Visible;
+                btnHelp.Visibility = Visibility.Visible;
             }
             else
             {
                 btnWelcome.Visibility = Visibility.Collapsed;
                 btnSettings.Visibility = Visibility.Collapsed;
+                btnHelp.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -81,6 +96,7 @@ namespace kkvpn_client
             btnWelcome.Visibility = visibility;
             btnConnect.Visibility = visibility;
             btnSettings.Visibility = visibility;
+            btnHelp.Visibility = visibility;
 
             btnStatus.Visibility = visibility;
             btnPeers.Visibility = visibility;
@@ -96,6 +112,7 @@ namespace kkvpn_client
             btnWelcome.Visibility = VisibilityMain;
             btnConnect.Visibility = VisibilityMain;
             btnSettings.Visibility = VisibilityMain;
+            btnHelp.Visibility = VisibilityMain;
 
             btnStatus.Visibility = VisibilityConnection;
             btnPeers.Visibility = VisibilityConnection;
@@ -149,10 +166,35 @@ namespace kkvpn_client
 
         private void wMain_Loaded(object sender, RoutedEventArgs e)
         {
-            this.SetInitialPosition();
-            ((App)Application.Current).Connection.OnExternalConnected += new EventHandler(Connection_Connected);
+            this.SetInitialPosition(); 
+            ((App)Application.Current).Connection.OnConnected += Connection_OnConnected;
+            ((App)Application.Current).Connection.OnDisconnected += Connection_OnDisconnected;
 
             this.NavigateTo("welcome");
+        }
+
+        void Connection_OnConnected(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                if (Connection.Connected)
+                {
+                    ShowMenu(true);
+                    NavigateTo("status");
+                    SetConnected(true);
+                }
+            });
+        }
+
+        private void Connection_OnDisconnected(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                ShowMenu(true);
+                NavigateTo("welcome");
+                SetConnected(false);
+                ChangeConnectMenuItemTarget("connection");
+            });
         }
 
         private void SetInitialPosition()
@@ -162,7 +204,7 @@ namespace kkvpn_client
             this.Top = workingArea.Bottom - this.Height - 4;
         }
 
-        private void Connection_Connected(object sender, EventArgs e)
+        private void Connection_ExternalConnected(object sender, EventArgs e)
         {
             this.Dispatcher.Invoke(() => 
             { 

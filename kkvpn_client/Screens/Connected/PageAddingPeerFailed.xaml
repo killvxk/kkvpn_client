@@ -1,0 +1,20 @@
+﻿<Page x:Class="kkvpn_client.Screens.PageAddingPeerFailed"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+      mc:Ignorable="d" 
+      d:DesignHeight="374" d:DesignWidth="448"
+	  Title="PageAddingPeerFailed">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="Dodanie nowego uczestnika nie powiodło się!" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
+        <sa:BasicButton x:Name="btnOK" Grid.Row="1" Width="160" Height="40
+                        " Text="Spróbuj ponownie" Image="\\KAJTEK-DESKTOP\Debug\icons\retry.png" VerticalAlignment="Top" Click="btnOK_Click"/>
+    </Grid>
+</Page>

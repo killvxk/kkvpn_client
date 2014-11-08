@@ -13,12 +13,12 @@ namespace kkvpn_client
             return true;
         }
 
-        public byte[] Encrypt(byte[] Data, int key)
+        public byte[] Encrypt(byte[] Data, int? key)
         {
             return Data;
         }
 
-        public byte[] Decrypt(byte[] Data, int key)
+        public byte[] Decrypt(byte[] Data, int? key)
         {
             return Data;
         }
@@ -28,7 +28,7 @@ namespace kkvpn_client
             return 0;
         }
 
-        public void DeleteKeyIfInStore(int key)
+        public void DeleteKeyIfInStore(int? key)
         {
 
         }
