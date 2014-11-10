@@ -14,6 +14,6 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <TextBlock TextWrapping="Wrap" Text="Czy na pewno chcesz się rozłączyć?" Margin="0,0,0,5" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
-        <sa:BasicButton x:Name="btnDisconnect" Grid.Row="1" Height="40" Width="100" Text="Rozłącz" Image="\\KAJTEK-DESKTOP\Debug\icons\disconnect_prompt.png" VerticalAlignment="Top" Click="btnDisconnect_Click"/>
+        <sa:BasicButton x:Name="btnDisconnect" Grid.Row="1" Height="40" Width="100" Text="Rozłącz" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/disconnect_prompt.png" VerticalAlignment="Top" Click="btnDisconnect_Click"/>
     </Grid>
 </Page>

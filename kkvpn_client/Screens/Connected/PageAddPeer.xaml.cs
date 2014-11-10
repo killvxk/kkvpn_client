@@ -1,4 +1,6 @@
-﻿using ProtoBuf;
+﻿using kkvpn_client.Communication;
+using kkvpn_client.Misc;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,13 +35,18 @@ namespace kkvpn_client.Screens
             Connection.OnAddedPeer += Connection_OnAddedPeer;
         }
 
+        public void SetConnectionString(string ConnectionString)
+        {
+            tbConnectionString.Text = ConnectionString;
+        }
+
         private void btnAddPeer_Click(object sender, RoutedEventArgs e)
         {
             SetToWait();
             Connection.AddPeer(tbConnectionString.Text, tbAddress.Text.IPToInt());
         }
 
-        void Connection_OnAddedPeer(object sender, EventArgs e)
+        private void Connection_OnAddedPeer(object sender, EventArgs e)
         {
             SetToIdle(e as AddedPeerEventArgs);
         }
@@ -69,11 +76,25 @@ namespace kkvpn_client.Screens
                 MessageBox.Show(eventArgs.Exc.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (!(eventArgs.Exc is NewClientNotReachedException))
                 {
-                    App.LogException(eventArgs.Exc);
+                    Logger.Instance.LogException(eventArgs.Exc);
                 }
 
                 ParentWindow.NavigateTo("addingpeerfailed");
                 ParentWindow.ChangeAddPeerMenuItemTarget("addingpeerfailed");
+            }
+        }
+
+        private void btnChecksum_Click(object sender, RoutedEventArgs e)
+        {
+            byte[] key = Base64PeerData.ExtractPublicKey(tbConnectionString.Text);
+
+            if (key != null)
+            {
+                ParentWindow.ShowChecksum(Connection.PublicKey, "addpeer");
+            }
+            else
+            {
+                MessageBox.Show("Niepoprawny ciąg znaków! Odkodowanie klucza publicznego nie powiodło się!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

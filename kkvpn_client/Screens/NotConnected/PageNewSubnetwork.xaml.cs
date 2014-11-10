@@ -1,4 +1,5 @@
-﻿using System;
+﻿using kkvpn_client.Misc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -107,7 +108,7 @@ namespace kkvpn_client.Screens
             {
                 Connection.Disconnect();
                 MessageBox.Show("Otwarcie nowej sieci niemożliwe: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
-                App.LogException(ex);
+                Logger.Instance.LogException(ex);
 
                 ParentWindow.ShowMenu(true);
                 ParentWindow.NavigateTo("connection");

@@ -19,18 +19,18 @@
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <Image x:Name="imPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="\\KAJTEK-DESKTOP\Debug\icons\key_settings.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275"/>
-                    <Image x:Name="imNotPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="\\KAJTEK-DESKTOP\Debug\icons\key_settings_not_present.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275" Visibility="Collapsed"/>
+                    <Image x:Name="imPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="pack://application:,,,/kkvpn_client;component/Resources/Icons/key_settings.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275"/>
+                    <Image x:Name="imNotPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="pack://application:,,,/kkvpn_client;component/Resources/Icons/key_settings_not_present.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275" Visibility="Collapsed"/>
                     <TextBlock x:Name="lblKeyPresent" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Klucz jest obecny." VerticalAlignment="Center" Margin="20,18,20,10" Height="23"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <TextBlock Text="Wybrany plik klucza: " HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
                     <TextBox x:Name="tbKeyFilePath" VerticalAlignment="Top" Height="20" Margin="5,6,5,0" Width="178" TextChanged="tbKeyFilePath_TextChanged"/>
-                    <sa:BasicButton x:Name="btnBrowse" Text="Przeglądaj" Image="\\KAJTEK-DESKTOP\Debug\icons\browse.png" Width="93" Margin="5" Click="btnBrowse_Click"/>
+                    <sa:BasicButton x:Name="btnBrowse" Text="Przeglądaj" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/browse.png" Width="93" Margin="5" Click="btnBrowse_Click"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,-7">
-                    <sa:BasicButton Text="Sprawdź sumę kontrolną klucza" Image="\\KAJTEK-DESKTOP\Debug\icons\checksum.png" Width="218" Margin="5"/>
-                    <sa:BasicButton Text="Wygeneruj nowy klucz" Image="\\KAJTEK-DESKTOP\Debug\icons\generate.png" Width="163" Margin="5"/>
+                    <sa:BasicButton Text="Sprawdź sumę kontrolną klucza" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/checksum.png" Width="218" Margin="5"/>
+                    <sa:BasicButton Text="Wygeneruj nowy klucz" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/generate.png" Width="163" Margin="5"/>
                 </StackPanel>
             </Grid>
         </GroupBox>

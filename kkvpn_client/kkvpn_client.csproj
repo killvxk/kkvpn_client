@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>kkvpn_client.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hardcodet.Wpf.TaskbarNotification">
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net45\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
@@ -51,6 +54,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -67,14 +71,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <Compile Include="Communication\UdpGoodbye.cs" />
+    <Compile Include="Communication\UdpHeartbeat.cs" />
+    <Compile Include="Misc\Logger.cs" />
+    <Compile Include="Screens\PageChecksum.xaml.cs">
+      <DependentUpon>PageChecksum.xaml</DependentUpon>
+    </Compile>
+    <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    </Page>
     <Compile Include="AppSettings.cs" />
     <Compile Include="Communication\Base64PeerData.cs" />
     <Compile Include="Communication\CommPacket.cs" />
     <Compile Include="Communication\Constants.cs" />
+    <Compile Include="Communication\EncryptedData.cs" />
     <Compile Include="Communication\PeerData.cs" />
     <Compile Include="Communication\UdpConnectingConfirmation.cs" />
     <Compile Include="Communication\UdpEncryptedPacket.cs" />
@@ -84,15 +95,17 @@
     <Compile Include="Encryption\IEncryptionEngine.cs" />
     <Compile Include="Encryption\KeyExchangeEngine.cs" />
     <Compile Include="Encryption\PlainTextEngine.cs" />
-    <Compile Include="Engine\AddedPeerEventHandler.cs" />
     <Compile Include="Engine\ConnectionManager.cs" />
     <Compile Include="Engine\DriverConnector.cs" />
     <Compile Include="Engine\DriverSystemCheck.cs" />
-    <Compile Include="Engine\MiscFunctions.cs" />
+    <Compile Include="Misc\MiscFunctions.cs" />
     <Compile Include="Engine\NetworkInterfaceConfiguation.cs" />
     <Compile Include="Communication\Subnetwork.cs" />
     <Compile Include="Communication\Statistics.cs" />
-    <Compile Include="Engine\UPnP.cs" />
+    <Compile Include="Misc\UPnP.cs" />
+    <Compile Include="Misc\PGPWordListGenerator.cs" />
+    <Compile Include="Misc\SingleInstance.cs" />
+    <Compile Include="Misc\UriRegistrar.cs" />
     <Compile Include="Screens\Connected\PageAddingPeerFailed.xaml.cs">
       <DependentUpon>PageAddingPeerFailed.xaml</DependentUpon>
     </Compile>
@@ -102,7 +115,7 @@
     <Compile Include="Screens\NotConnected\PageConnection.xaml.cs">
       <DependentUpon>PageConnection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\NotConnected\PageConnectToExisting.xaml.cs">
+    <Compile Include="Screens\Connected\PageConnectToExisting.xaml.cs">
       <DependentUpon>PageConnectToExisting.xaml</DependentUpon>
     </Compile>
     <Compile Include="Screens\Connected\PageDisconnect.xaml.cs">
@@ -162,7 +175,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Screens\NotConnected\PageConnectToExisting.xaml">
+    <Page Include="Screens\Connected\PageConnectToExisting.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -210,6 +223,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Screens\PageChecksum.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -240,6 +257,101 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Content Include="Resources\Icons\add_peer.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\add_peer_window.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\back.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\browse.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\cancel.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\checksum.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\clipboard.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\close.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\connect.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\connect_to_existing.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\disconnect.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\disconnect_prompt.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\forward.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\generate.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\globe.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\help.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\help_welcome.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\home.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\key.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\key_settings.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\key_settings_not_present.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\new_network.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\peers.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\retry.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\settings.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\settings_welcome.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\status.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\HelpGraphics\help1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\HelpGraphics\help2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\HelpGraphics\help3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\HelpGraphics\help4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

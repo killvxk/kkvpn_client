@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Hardcodet.Wpf.TaskbarNotification;
+using kkvpn_client.Screens;
 
 namespace kkvpn_client
 {
@@ -29,21 +30,22 @@ namespace kkvpn_client
         {
             pages = new Dictionary<string, Page>() 
             { 
-                {"welcome", new Screens.PageWelcome(this)},
-                {"connection", new Screens.PageConnection(this)},
-                {"settings", new Screens.PageSettings(this)},
-                {"newsubnetwork", new Screens.PageNewSubnetwork(this)},
-                {"connecttoexisting", new Screens.PageConnectToExisting(this)},
-                {"status", new Screens.PageStatus(this)},
-                {"addpeer", new Screens.PageAddPeer(this)},
-                {"peers", new Screens.PagePeers(this)},
-                {"disconnect", new Screens.PageDisconnect(this)},
-                {"wait", new Screens.PageWait(this)},
-                {"help", new Screens.PageHelp1(this)},
-                {"help2", new Screens.PageHelp2(this)},
-                {"help3", new Screens.PageHelp3(this)},
-                {"help4", new Screens.PageHelp4(this)},
-                {"addingpeerfailed", new Screens.PageAddingPeerFailed(this)}
+                {"welcome", new PageWelcome(this)},
+                {"connection", new PageConnection(this)},
+                {"settings", new PageSettings(this)},
+                {"newsubnetwork", new PageNewSubnetwork(this)},
+                {"connecttoexisting", new PageConnectToExisting(this)},
+                {"status", new PageStatus(this)},
+                {"addpeer", new PageAddPeer(this)},
+                {"peers", new PagePeers(this)},
+                {"disconnect", new PageDisconnect(this)},
+                {"wait", new PageWait(this)},
+                {"help", new PageHelp1(this)},
+                {"help2", new PageHelp2(this)},
+                {"help3", new PageHelp3(this)},
+                {"help4", new PageHelp4(this)},
+                {"addingpeerfailed", new PageAddingPeerFailed(this)},
+                {"checksum", new PageChecksum(this)}
             };
             Connected = false;
 
@@ -102,6 +104,12 @@ namespace kkvpn_client
             btnPeers.Visibility = visibility;
             btnAddPeer.Visibility = visibility;
             btnDisconnect.Visibility = visibility;
+        }
+
+        public void ShowChecksum(byte[] data, string returnToPage)
+        {
+            ((PageChecksum)pages["checksum"]).ShowChecksum(data, returnToPage);
+            NavigateTo("checksum");
         }
 
         private void SwitchMenus(bool Connected)
@@ -169,11 +177,12 @@ namespace kkvpn_client
             this.SetInitialPosition(); 
             ((App)Application.Current).Connection.OnConnected += Connection_OnConnected;
             ((App)Application.Current).Connection.OnDisconnected += Connection_OnDisconnected;
+            ((App)Application.Current).OnReceivedURIData += MainWindow_OnReceivedURIData;
 
             this.NavigateTo("welcome");
         }
 
-        void Connection_OnConnected(object sender, EventArgs e)
+        private void Connection_OnConnected(object sender, EventArgs e)
         {
             this.Dispatcher.Invoke(() =>
             {
@@ -197,11 +206,24 @@ namespace kkvpn_client
             });
         }
 
-        private void SetInitialPosition()
+        private void MainWindow_OnReceivedURIData(object sender, EventArgs e)
         {
-            var workingArea = System.Windows.SystemParameters.WorkArea;
-            this.Left = workingArea.Right - this.Width - 4;
-            this.Top = workingArea.Bottom - this.Height - 4;
+            this.Dispatcher.Invoke(() =>
+            {
+                this.Activate();
+                if (Connection.Connected)
+                {
+                    ((PageAddPeer)pages["addpeer"]).SetConnectionString(
+                        ((ReceivedURIDataEventArgs)e).Args[1]
+                        );
+                    NavigateTo("addpeer");
+                    btnAddPeer.IsChecked = true;
+                }
+                else
+                {
+                    MessageBox.Show("Aby dodać użytkownika musisz być połączony do istniejącej podsieci!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            });
         }
 
         private void Connection_ExternalConnected(object sender, EventArgs e)
@@ -214,15 +236,26 @@ namespace kkvpn_client
             });
         }
 
+        private void SetInitialPosition()
+        {
+            var workingArea = System.Windows.SystemParameters.WorkArea;
+            this.Left = workingArea.Right - this.Width - 4;
+            this.Top = workingArea.Bottom - this.Height - 4;
+        }
+
         private void btnExit_Click(object sender, RoutedEventArgs e)
         {
-            if (this.Connected)
+            this.Close();
+        }
+
+        private void wMain_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (this.Connected
+                || frMain.Content == pages["connecttoexisting"]
+                || frMain.Content == pages["checksum"])
             {
+                e.Cancel = true;
                 SystemCommands.MinimizeWindow(this);
-            }
-            else
-            {
-                this.Close();
             }
         }
     }

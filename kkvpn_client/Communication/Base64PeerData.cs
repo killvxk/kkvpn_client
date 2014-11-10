@@ -47,5 +47,17 @@ namespace kkvpn_client.Communication
             Serializer.Serialize<Base64PeerData>(ms, this);
             return System.Convert.ToBase64String(ms.ToArray());
         }
+
+        public static byte[] ExtractPublicKey(string base64EncodedPeerData)
+        {
+            try
+            {
+                return GetBase64PeerData(base64EncodedPeerData).PublicKey;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

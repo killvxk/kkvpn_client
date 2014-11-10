@@ -12,27 +12,54 @@ using System.Xml;
 using kkvpn_client.Engine;
 using System.Threading;
 using System.Windows.Threading;
+using Microsoft.Shell;
+using kkvpn_client.Misc;
 
 namespace kkvpn_client
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    partial class App : Application
+    partial class App : Application, ISingleInstanceApp
     {
-        private const string logfilename = "C:\\Users\\WDKRemoteUser\\Desktop\\log.txt";
+        private const string LogFileName = "C:\\Users\\WDKRemoteUser\\Desktop\\log.txt";
+        private const string Unique = "kkVPN_Unique";
 
         internal ConnectionManager Connection;
+        internal Logger Log;
         internal AppSettings Settings;
         internal UPnPPortMapper UPnP;
 
+        internal event EventHandler OnReceivedURIData; 
+
         private bool InitFail = false;
-        
+
+        [STAThread]
+        public static void Main()
+        {
+            if (SingleInstance<App>.InitializeAsFirstInstance(Unique))
+            {
+                var application = new App();
+                application.InitializeComponent();
+                application.Run();
+
+                SingleInstance<App>.Cleanup();
+            }
+        }
+
+        public bool SignalExternalCommandLineArgs(IList<string> args)
+        {
+            if (OnReceivedURIData != null)
+            {
+                OnReceivedURIData(this, new ReceivedURIDataEventArgs(args));
+            }
+
+            return true;
+        }
+
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            Application.Current.DispatcherUnhandledException += new DispatcherUnhandledExceptionEventHandler(Application_ThreadException); // non-UI
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException); // UI
-
+            Log = new Logger(LogFileName);
             Connection = new ConnectionManager();
             try
             {
@@ -87,48 +114,6 @@ namespace kkvpn_client
             }
         }
 
-        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            LogException((e.ExceptionObject as Exception));
-        }
-
-        private void Application_ThreadException(object sender, DispatcherUnhandledExceptionEventArgs e)
-        {
-            LogException(e.Exception);
-        }
-
-        static public void LogMsg(string msg)
-        {
-            StreamWriter logfile;
-
-            if (!File.Exists(logfilename))
-                logfile = new StreamWriter(logfilename);
-            else
-                logfile = File.AppendText(logfilename);
-
-            logfile.WriteLine(DateTime.Now + ": " + msg + "\n");
-            logfile.Close();
-        }
-
-        static public void LogException(Exception ex)
-        {
-            StreamWriter logfile;
-
-            if (!File.Exists(logfilename))
-                logfile = new StreamWriter(logfilename);
-            else
-                logfile = File.AppendText(logfilename);
-
-            logfile.WriteLine(DateTime.Now + ": " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace);
-            Exception e = ex.InnerException;
-            while (e != null)
-            {
-                logfile.WriteLine("  InnerException: " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace);
-                e = e.InnerException;
-            }
-            logfile.Close();
-        }
-
         private void Application_Exit(object sender, ExitEventArgs e)
         {
             if (!InitFail)
@@ -136,6 +121,16 @@ namespace kkvpn_client
                 UPnP.Dispose();
                 Connection.Dispose();
             }
+        }
+    }
+
+    public class ReceivedURIDataEventArgs : EventArgs
+    {
+        public IList<string> Args;
+
+        public ReceivedURIDataEventArgs(IList<string> Args)
+        {
+            this.Args = Args;
         }
     }
 }

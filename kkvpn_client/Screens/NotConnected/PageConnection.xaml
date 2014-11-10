@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="Aby rozpocząć pracę utwórz nową sieć:" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI" Margin="0,12,0,11"/>
         <TextBlock Grid.Column="1" Grid.Row="3" TextWrapping="Wrap" Text="...lub połącz się z istniejącą siecią:" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI" Margin="0,12,0,11"/>
-        <sa:BasicButton x:Name="btnNewSubnetwork" Grid.Column="1" Grid.Row="2" Height="40" Margin="40,15,140,15" Text="Utwórz nową sieć" Image="\\KAJTEK-DESKTOP\Debug\icons\new_network.png" Click="Button_Click" Tag="newsubnetwork"/>
-        <sa:BasicButton x:Name="btnConnectToExisting" Grid.Column="1" Grid.Row="4" Height="40" Margin="40,15,140,15" Text="Połącz do istniejącej sieci" Image="\\KAJTEK-DESKTOP\Debug\icons\connect_to_existing.png" Click="Button_Click" Tag="connecttoexisting"/>
+        <sa:BasicButton x:Name="btnNewSubnetwork" Grid.Column="1" Grid.Row="2" Height="40" Margin="40,15,140,15" Text="Utwórz nową sieć" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/new_network.png" Click="Button_Click" Tag="newsubnetwork"/>
+        <sa:BasicButton x:Name="btnConnectToExisting" Grid.Column="1" Grid.Row="4" Height="40" Margin="40,15,140,15" Text="Połącz do istniejącej sieci" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/connect_to_existing.png" Click="Button_Click" Tag="connecttoexisting"/>
     </Grid>
 </Page>

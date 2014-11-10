@@ -14,9 +14,9 @@
             <RowDefinition Height="91*"/>
             <RowDefinition Height="66*"/>
         </Grid.RowDefinitions>
-        <Image Source="\\KAJTEK-DESKTOP\Debug\help_graphics\help3.png" HorizontalAlignment="Center" Height="162" VerticalAlignment="Top" Width="274" Grid.Row="1"/>
+        <Image Source="pack://application:,,,/kkvpn_client;component/Resources/HelpGraphics/help3.png" HorizontalAlignment="Center" Height="162" VerticalAlignment="Top" Width="274" Grid.Row="1"/>
         <TextBlock HorizontalAlignment="Center" Grid.Row="2" TextWrapping="Wrap" Text="Każdy z użytkowników w sieci generuje własny klucz sesyjny AES w celu zabezpieczenia wymiany danych z nowym użytkownikiem. Klucz ustalany jest według schematu Diffiego-Hellmana uwierzytelnionego podpisem DSA." VerticalAlignment="Top" Margin="68,0,58,0" Width="322" Height="80"/>
         <TextBlock HorizontalAlignment="Left" Margin="68,35,0,0" TextWrapping="Wrap" Text="Jak działa kkVPN?" VerticalAlignment="Top" Height="15" Width="118"/>
-        <sa:BasicButton Name="btnForward" Text="Dalej" Height="32" Width="106" Grid.Row="2" Image="\\KAJTEK-DESKTOP\Debug\icons\forward.png" Click="btnForward_Click" Margin="326,84,16,16"/>
+        <sa:BasicButton Name="btnForward" Text="Dalej" Height="32" Width="106" Grid.Row="2" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/forward.png" Click="btnForward_Click" Margin="326,84,16,16"/>
     </Grid>
 </Page>

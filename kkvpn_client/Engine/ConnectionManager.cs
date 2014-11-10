@@ -1,5 +1,6 @@
 ﻿using kkvpn_client.Communication;
 using kkvpn_client.Engine;
+using kkvpn_client.Misc;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace kkvpn_client
     {
         private const int UdpPort = 57384;
         private const int ConnectionRetries = 10;
+        private const int UdpReceiveTimeout = 1000;
+        private const int NoHeartbeatTimeout = 180;
+        private const int TimeBetweenHeartbeats = 30*1000;
+        private const string URI = "kkdrv";
 
         private AppSettings Settings;
 
@@ -30,6 +35,7 @@ namespace kkvpn_client
         private DriverConnector Driver;
         private NetworkInterfaceConfiguation InterfaceConfig;
         private KeyExchangeEngine KeyExchange;
+        private System.Timers.Timer HeartbeatTimer;
 
         private Dictionary<UInt32, PeerData> PeersTx;
         private Dictionary<IPEndPoint, PeerData> PeersRx;
@@ -62,6 +68,11 @@ namespace kkvpn_client
             get { return _PortForwarded; }
         }
 
+        public byte[] PublicKey
+        {
+            get { return KeyExchange.GetPublicKey(); }
+        }
+    
         public ConnectionManager()
         {
             Stats = new Statistics();
@@ -71,6 +82,8 @@ namespace kkvpn_client
             AwaitingExternalConnection = false;
             DriverStarted = false;
             _Connected = false;
+
+            UriRegistrar.RegisterUri(URI, Environment.GetCommandLineArgs()[0]);
         }
 
         public void InitializeManager()
@@ -82,11 +95,15 @@ namespace kkvpn_client
 
             InterfaceConfig = new NetworkInterfaceConfiguation();
 
-            //Encryption = new PlainTextEngine();
-            Encryption = new AesEngine();
+            Encryption = new PlainTextEngine();
+            //Encryption = new AesEngine();
             Encryption.Initialize();
             KeyExchange = new KeyExchangeEngine();
             KeyExchange.InitializeKey();
+
+            HeartbeatTimer = new System.Timers.Timer(TimeBetweenHeartbeats);
+            HeartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            HeartbeatTimer.Start();
         }
 
         public Task CreateNewNetwork(string NetworkName, string UserName, uint Address, uint CIDR)
@@ -164,7 +181,7 @@ namespace kkvpn_client
                 LocalEndpoint,
                 KeyExchange.GetPublicKey()
                 );
-            return peerData.GetBase64EncodedData();
+            return URI + ":" + peerData.GetBase64EncodedData();
         }
 
         public Dictionary<string, string> GetSubnetworkInfo()
@@ -242,6 +259,11 @@ namespace kkvpn_client
                 }
             }
 
+            if (ConnectionString.IndexOf(URI) > -1)
+            {
+                ConnectionString.Remove(ConnectionString.IndexOf(URI), URI.Length + 1);
+            }
+
             PeerData peer = null;
             try
             {
@@ -260,6 +282,9 @@ namespace kkvpn_client
 
         public void Disconnect()
         {
+            UdpGoodbye goodbye = new UdpGoodbye();
+            Broadcast<UdpGoodbye>(goodbye);
+
             StopDriver();
             _Connected = false;
 
@@ -268,6 +293,8 @@ namespace kkvpn_client
 
         public void Dispose()
         {
+            UriRegistrar.UnregisterUri(URI);
+
             StopDriver();
             Driver.CloseDevice();
         }
@@ -313,13 +340,13 @@ namespace kkvpn_client
             PeersTx = new Dictionary<uint, PeerData>();
             PeersRx = new Dictionary<IPEndPoint, PeerData>();
 
-            Thread UdpRxThread = new Thread(UdpRxWorkerRoutine);
-            UdpRxThread.Priority = ThreadPriority.BelowNormal;
+            Thread RxThread = new Thread(RxWorkerRoutine);
+            RxThread.Priority = ThreadPriority.BelowNormal;
 
             try
             {
                 _Connected = true;
-                UdpRxThread.Start();
+                RxThread.Start();
             }
             catch
             {
@@ -372,9 +399,9 @@ namespace kkvpn_client
             DriverStarted = false;
         }
 
-        private void UdpRxWorkerRoutine()
+        private void RxWorkerRoutine()
         {
-            Udp.Client.ReceiveTimeout = 250;
+            Udp.Client.ReceiveTimeout = UdpReceiveTimeout;
             IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
             while (_Connected)
             {
@@ -432,9 +459,9 @@ namespace kkvpn_client
             }
             else if (packet is UdpConnectingConfirmation)
             {
+                AddPeerToDictionaries(NewPeer);
                 if (ReceivedConfirmation != null)
                     ReceivedConfirmation.Set();
-                AddPeerToDictionaries(NewPeer);
             }
             else if (packet is UdpNewPeerPacket)
             {
@@ -470,6 +497,17 @@ namespace kkvpn_client
                 if (PeersRx.TryGetValue(ep, out peer))
                 {
                     NegotiateKey(peer, packet as UdpKeyNegotiationPacket);
+                }
+            }
+            else if (packet is UdpGoodbye)
+            {
+                RemovePeerFromDictionaries(PeersRx[ep]);
+            }
+            else if (packet is UdpHeartbeat)
+            {
+                if (PeersRx.TryGetValue(ep, out peer))
+                {
+                    peer.Heartbeat();
                 }
             }
         }
@@ -516,16 +554,16 @@ namespace kkvpn_client
 
         private void ProcessReceivedDriverData(byte[] data)
         {
-            if (data.Length < 20)
-            {
-                return;
-            }
+            //if (data.Length < 20)
+            //{
+            //    return;
+            //}
             uint sendTo = BitConverter.ToUInt32(data, 16).InvertBytes();
 
             PeerData peer = null;
             if (PeersTx.TryGetValue(sendTo, out peer))
             {
-                byte[] encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
+                EncryptedData encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
 
                 if (encryptedData != null)
                 {
@@ -610,11 +648,11 @@ namespace kkvpn_client
                     KeyExchange.GetDerivedKey(packet.KeyMaterial, packet.DSASignature, peer.PublicKey)
                     );
 
-                App.LogMsg(
-                    MiscFunctions.PrintHex(
-                        KeyExchange.GetDerivedKey(packet.KeyMaterial, packet.DSASignature, peer.PublicKey)
-                        )
-                    );
+                //App.LogMsg(
+                //    MiscFunctions.PrintHex(
+                //        KeyExchange.GetDerivedKey(packet.KeyMaterial, packet.DSASignature, peer.PublicKey)
+                //        )
+                //    );
                 peer.KeyExchangeInProgress = false;
             }
             else
@@ -640,6 +678,31 @@ namespace kkvpn_client
         {
             byte[] data = GetSerializedBytes<T>(packet);
             Udp.Send(data, data.Length, ep);
+        }
+
+        private void Broadcast<T>(T packet)
+        {
+            foreach (PeerData peer in PeersTx.Values)
+            {
+                if (peer != Me)
+                {
+                    SendPacket<T>(packet, peer.GetEndpoint());
+                }
+            }
+        }
+
+        private void HeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            UdpHeartbeat heartbeat = new UdpHeartbeat();
+            Broadcast<UdpHeartbeat>(heartbeat);
+
+            foreach (PeerData peer in PeersTx.Values)
+            {
+                if (peer != Me && peer.Timeout(NoHeartbeatTimeout))
+                {
+                    RemovePeerFromDictionaries(peer);
+                }
+            }
         }
     }
 

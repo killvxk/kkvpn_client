@@ -12,10 +12,16 @@
         <ListView x:Name="lvPeerList" HorizontalAlignment="Left" Height="314" Margin="30,30,0,0" VerticalAlignment="Top" Width="382">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Nazwa użytkownika" Width="150" DisplayMemberBinding="{Binding PeerName}"/>
+                    <GridViewColumn Header="Nazwa użytkownika" Width="130" DisplayMemberBinding="{Binding PeerName}"/>
                     <GridViewColumn Header="Adres IP" Width="80" DisplayMemberBinding="{Binding SubnetworkIPstring}"/>
+                    <GridViewColumn Header="Transfer" Width="160" DisplayMemberBinding="{Binding StatsShort}"/>
                 </GridView>
             </ListView.View>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="ToolTip" Value="{Binding Path=StatsLong}" />
+                </Style>
+            </ListView.ItemContainerStyle>
         </ListView>
 
     </Grid>

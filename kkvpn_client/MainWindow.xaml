@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
         xmlns:tb="http://www.hardcodet.net/taskbar"
-        Title="kkVPN" Height="400" Width="600" WindowStyle="None" ResizeMode="NoResize" Background="#FFBDBDBD" Loaded="wMain_Loaded" ShowInTaskbar="False">
+        Title="kkVPN" Height="400" Width="600" WindowStyle="None" ResizeMode="NoResize" Background="#FFBDBDBD" Loaded="wMain_Loaded" ShowInTaskbar="False" Closing="wMain_Closing">
     <Grid Margin="1">
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
@@ -21,14 +21,14 @@
                     <GradientStop Color="#FF3A3633" Offset="0.9"/>
                 </LinearGradientBrush>
             </StackPanel.Background>
-            <sa:MenuButton Height="40" x:Name="btnWelcome" Text="Witaj!" Image="\\KAJTEK-DESKTOP\Debug\icons\home.png" IsChecked="True" Click="btnMenuButton_Click" Tag="welcome"/>
-            <sa:MenuButton Height="40" x:Name="btnConnect" Text="Połączenie" Image="\\KAJTEK-DESKTOP\Debug\icons\connect.png" Click="btnMenuButton_Click" Tag="connection"/>
-            <sa:MenuButton Height="40" x:Name="btnSettings" Text="Ustawienia" Image="\\KAJTEK-DESKTOP\Debug\icons\settings.png" Click="btnMenuButton_Click" Tag="settings"/>
-            <sa:MenuButton Height="40" x:Name="btnHelp" Text="Pomoc" Image="\\KAJTEK-DESKTOP\Debug\icons\help.png" Click="btnMenuButton_Click" Tag="help"/>
-            <sa:MenuButton Height="40" x:Name="btnStatus" Text="Status" Image="\\KAJTEK-DESKTOP\Debug\icons\status.png" Click="btnMenuButton_Click" Tag="status" Visibility="Collapsed"/>
-            <sa:MenuButton Height="40" x:Name="btnPeers" Text="Połączenia" Image="\\KAJTEK-DESKTOP\Debug\icons\peers.png" Click="btnMenuButton_Click" Tag="peers" Visibility="Collapsed"/>
-            <sa:MenuButton Height="40" x:Name="btnAddPeer" Text="Dodaj połączenie" Image="\\KAJTEK-DESKTOP\Debug\icons\add_peer.png" Click="btnMenuButton_Click" Tag="addpeer" Visibility="Collapsed"/>
-            <sa:MenuButton Height="40" x:Name="btnDisconnect" Text="Rozłącz" Image="\\KAJTEK-DESKTOP\Debug\icons\disconnect.png" Click="btnMenuButton_Click" Tag="disconnect" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnWelcome" Text="Witaj!" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/home.png" IsChecked="True" Click="btnMenuButton_Click" Tag="welcome"/>
+            <sa:MenuButton Height="40" x:Name="btnConnect" Text="Połączenie" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/connect.png" Click="btnMenuButton_Click" Tag="connection"/>
+            <sa:MenuButton Height="40" x:Name="btnSettings" Text="Ustawienia" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/settings.png" Click="btnMenuButton_Click" Tag="settings"/>
+            <sa:MenuButton Height="40" x:Name="btnHelp" Text="Pomoc" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/help.png" Click="btnMenuButton_Click" Tag="help"/>
+            <sa:MenuButton Height="40" x:Name="btnStatus" Text="Status" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/status.png" Click="btnMenuButton_Click" Tag="status" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnPeers" Text="Połączenia" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/peers.png" Click="btnMenuButton_Click" Tag="peers" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnAddPeer" Text="Dodaj połączenie" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/add_peer.png" Click="btnMenuButton_Click" Tag="addpeer" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnDisconnect" Text="Rozłącz" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/disconnect.png" Click="btnMenuButton_Click" Tag="disconnect" Visibility="Collapsed"/>
         </StackPanel>
         <Frame x:Name="frMain" Grid.Column="1" Background="#FFF3F3F3" Grid.Row="1" NavigationUIVisibility="Hidden"/>
         <StackPanel x:Name="spTitleBarLeft" Orientation="Horizontal" MouseDown="spTitleBarRight_MouseDown">
@@ -38,7 +38,7 @@
                     <GradientStop Color="#FFE2E2E2" Offset="1"/>
                 </LinearGradientBrush>
             </StackPanel.Background>
-            <Image Source="\\KAJTEK-DESKTOP\Debug\icons\globe.png"/>
+            <Image Source="pack://application:,,,/kkvpn_client;component/Resources/Icons/globe.png"/>
             <TextBlock TextWrapping="Wrap" Text="kkVPN" FontFamily="Segoe UI" VerticalAlignment="Center" Margin="4,4,0,3"/>
         </StackPanel>
         <DockPanel x:Name="spTitleBarRight" Grid.Column="1" MouseDown="spTitleBarRight_MouseDown">
@@ -48,7 +48,7 @@
                     <GradientStop Color="#FFE2E2E2" Offset="1"/>
                 </LinearGradientBrush>
             </DockPanel.Background>
-            <sa:MenuButton x:Name="btnExit" HorizontalAlignment="Right" Image="\\KAJTEK-DESKTOP\Debug\icons\close.png" Height="24" Width="24" Click="btnExit_Click"/>    
+            <sa:MenuButton x:Name="btnExit" HorizontalAlignment="Right" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/close.png" Height="24" Width="24" Click="btnExit_Click"/>    
         </DockPanel>
     </Grid>
 </Window>

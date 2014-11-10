@@ -1,4 +1,5 @@
-﻿using System;
+﻿using kkvpn_client.Communication;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,55 +11,60 @@ namespace kkvpn_client
 {
     class AesEngine : IEncryptionEngine
     {
-        RijndaelManaged Aes;
-        MemoryStream MemoryStreamEncrypt;
-        MemoryStream MemoryStreamDecrypt;
-        Dictionary<int, CryptoStream> CryptoStreamEncrypt;
-        Dictionary<int, CryptoStream> CryptoStreamDecrypt;
+        private Dictionary<int, byte[]> Keys;
+        private RijndaelManaged Aes;
 
         public bool Initialize()
         {
             Aes = new RijndaelManaged();
-
             Aes.KeySize = 256;
             Aes.BlockSize = 128;
-            Aes.Padding = PaddingMode.ISO10126;
-            MemoryStreamEncrypt = new MemoryStream();
-            MemoryStreamDecrypt = new MemoryStream();
-            CryptoStreamEncrypt = new Dictionary<int, CryptoStream>();
-            CryptoStreamDecrypt = new Dictionary<int, CryptoStream>();
-
+            Aes.Padding = PaddingMode.ANSIX923;
             Aes.Mode = CipherMode.CBC;
+
+            Keys = new Dictionary<int, byte[]>();
 
             return true;
         }
 
-        public byte[] Encrypt(byte[] data, int? key)
+        public EncryptedData Encrypt(byte[] data, int? key)
         {
             if (key == null)
             {
                 return null;
             }
-            CryptoStream stream = CryptoStreamEncrypt[key ?? -1];
 
-            stream.Write(data, 0, data.Length);
-            stream.Flush();
+            using (MemoryStream memoryStreamEncrypt = new MemoryStream())
+            {
+                Aes.GenerateIV();
+                byte[] keyBytes = Keys[key ?? -1];
+                using (CryptoStream stream = new CryptoStream(memoryStreamEncrypt, Aes.CreateEncryptor(keyBytes, Aes.IV), CryptoStreamMode.Write))
+                {
+                    stream.Write(data, 0, data.Length);
+                }
 
-            return MemoryStreamEncrypt.ToArray();
+                return new EncryptedData(memoryStreamEncrypt.ToArray(), Aes.IV, (ushort)data.Length);
+            }
         }
 
-        public byte[] Decrypt(byte[] data, int? key)
+        public byte[] Decrypt(EncryptedData data, int? key)
         {
             if (key == null)
             {
                 return null;
             }
-            CryptoStream stream = CryptoStreamDecrypt[key ?? -1];
 
-            stream.Write(data, 0, data.Length);
-            stream.Flush();
+            using (MemoryStream memoryStreamData = new MemoryStream(data.Data))
+            {
+                byte[] decryptedData = new byte[data.Data.Length];
+                byte[] keyBytes = Keys[key ?? -1];
+                using (CryptoStream stream = new CryptoStream(memoryStreamData, Aes.CreateDecryptor(keyBytes, data.IV), CryptoStreamMode.Read))
+                {
+                    stream.Read(decryptedData, 0, data.DataLength);
+                }
 
-            return MemoryStreamDecrypt.ToArray();
+                return decryptedData;
+            }
         }
 
         public int AddKeyToStore(byte[] key)
@@ -69,9 +75,7 @@ namespace kkvpn_client
             }
 
             int dictKey = key.GetHashCode();
-
-            CryptoStreamEncrypt.Add(dictKey, new CryptoStream(MemoryStreamEncrypt, Aes.CreateEncryptor(), CryptoStreamMode.Write));
-            CryptoStreamDecrypt.Add(dictKey, new CryptoStream(MemoryStreamEncrypt, Aes.CreateDecryptor(), CryptoStreamMode.Write));
+            Keys.Add(dictKey, key);
 
             return dictKey;
         }
@@ -83,14 +87,9 @@ namespace kkvpn_client
                 return;
             }
 
-            if (CryptoStreamEncrypt.ContainsKey(key ?? -1))
+            if (Keys.ContainsKey(key ?? -1))
             {
-                CryptoStreamEncrypt.Remove(key ?? -1);
-            }
-
-            if (CryptoStreamDecrypt.ContainsKey(key ?? -1))
-            {
-                CryptoStreamDecrypt.Remove(key ?? -1);
+                Keys.Remove(key ?? -1);
             }
         }
     }

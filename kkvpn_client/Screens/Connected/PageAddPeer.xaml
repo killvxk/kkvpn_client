@@ -17,9 +17,10 @@
         </Grid.RowDefinitions>
         <TextBox x:Name="tbConnectionString" HorizontalAlignment="Center" TextWrapping="Wrap" Width="334" FontFamily="Segoe UI Light" Grid.Row="1" Margin="57,0"/>
         <TextBlock HorizontalAlignment="Left" Margin="57,119,0,0" TextWrapping="Wrap" Text="Wklej ciąg znaków z danymi nowego użytkownika:" VerticalAlignment="Top"/>
-        <sa:BasicButton x:Name="btnAddPeer" Grid.Row="2" Height="40" Text="Dołącz użytkownika" Image="\\KAJTEK-DESKTOP\Debug\icons\add_peer_window.png" Margin="233,0,57,0" Click="btnAddPeer_Click"/>
+        <sa:BasicButton x:Name="btnAddPeer" Grid.Row="2" Height="40" Text="Dołącz użytkownika" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/add_peer_window.png" Margin="233,0,57,0" Click="btnAddPeer_Click"/>
         <TextBlock HorizontalAlignment="Left" Margin="57,14,0,0" Grid.Row="2" TextWrapping="Wrap" Text="Adres IP: " VerticalAlignment="Top"/>
         <TextBox x:Name="tbAddress" HorizontalAlignment="Right" Height="22" TextWrapping="Wrap" Text="10.254.0.1" VerticalAlignment="Center" Width="92" Margin="0,11,238,7" RenderTransformOrigin="0.5,0.5" Grid.Row="2"/>
+        <sa:BasicButton x:Name="btnChecksum" Text="" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/checksum.png" Margin="396,10,24,27" Grid.Row="1" ToolTip="Sprawdź sumę kontrolną klucza publicznego" Click="btnChecksum_Click"/>
 
     </Grid>
 </Page>

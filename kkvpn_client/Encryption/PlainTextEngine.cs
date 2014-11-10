@@ -1,4 +1,5 @@
-﻿using System;
+﻿using kkvpn_client.Communication;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,14 +14,14 @@ namespace kkvpn_client
             return true;
         }
 
-        public byte[] Encrypt(byte[] Data, int? key)
+        public EncryptedData Encrypt(byte[] Data, int? key)
         {
-            return Data;
+            return new EncryptedData(Data, null, 0);
         }
 
-        public byte[] Decrypt(byte[] Data, int? key)
+        public byte[] Decrypt(EncryptedData Data, int? key)
         {
-            return Data;
+            return Data.Data;
         }
 
         public int AddKeyToStore(byte[] key)

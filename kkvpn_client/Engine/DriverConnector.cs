@@ -169,6 +169,7 @@ namespace kkvpn_client.Engine
                     );
             }
 
+            ResetFilter();
             KKDRV_FILTER_DATA FilterData;
 
             FilterData.low = (subnetwork + 1);

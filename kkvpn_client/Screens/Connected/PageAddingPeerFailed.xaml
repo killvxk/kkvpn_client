@@ -15,6 +15,6 @@
         </Grid.RowDefinitions>
         <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="Dodanie nowego uczestnika nie powiodło się!" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
         <sa:BasicButton x:Name="btnOK" Grid.Row="1" Width="160" Height="40
-                        " Text="Spróbuj ponownie" Image="\\KAJTEK-DESKTOP\Debug\icons\retry.png" VerticalAlignment="Top" Click="btnOK_Click"/>
+                        " Text="Spróbuj ponownie" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/retry.png" VerticalAlignment="Top" Click="btnOK_Click"/>
     </Grid>
 </Page>

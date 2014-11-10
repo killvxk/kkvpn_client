@@ -67,12 +67,12 @@ namespace kkvpn_client.Screens
 
                     lblPeers.Text = Connection.GetPeerCount().ToString();
 
-                    lblDLSpeed.Text = stats.DLSpeed.ToString("0.00") + " kb/s";
-                    lblULSpeed.Text = stats.ULSpeed.ToString("0.00") + " kb/s";
+                    lblDLSpeed.Text = stats.DLSpeed.ToString("0.00") + " KB/s";
+                    lblULSpeed.Text = stats.ULSpeed.ToString("0.00") + " KB/s";
 
-                    lblDLBytes.Text = ((double)stats.DLBytes / 1024.0).ToString("0.00") + " kb";
+                    lblDLBytes.Text = ((double)stats.DLBytes / 1024.0).ToString("0.00") + " KB";
                     lblDLPackets.Text = stats.DLPackets.ToString();
-                    lblULBytes.Text = ((double)stats.ULBytes / 1024.0).ToString("0.00") + " kb";
+                    lblULBytes.Text = ((double)stats.ULBytes / 1024.0).ToString("0.00") + " KB";
                     lblULPackets.Text = stats.ULPackets.ToString();
                 });
             }

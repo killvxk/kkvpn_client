@@ -12,11 +12,11 @@ namespace kkvpn_client.Communication
         [ProtoMember(1)]
         public byte KeyID;
         [ProtoMember(2)]
-        public byte[] Data;
+        public EncryptedData Data;
 
         public UdpEncryptedPacket() { }
 
-        public UdpEncryptedPacket(byte KeyID, byte[] Data)
+        public UdpEncryptedPacket(byte KeyID, EncryptedData Data)
         {
             this.PacketID = Constants._UdpEncryptedPacket;
 

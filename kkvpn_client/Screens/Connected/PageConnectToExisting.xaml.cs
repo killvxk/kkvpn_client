@@ -1,4 +1,5 @@
-﻿using System;
+﻿using kkvpn_client.Misc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,12 +24,15 @@ namespace kkvpn_client.Screens
         private ConnectionManager Connection;
         private MainWindow ParentWindow;
         private AppSettings Settings;
+        private bool ReturningFromChecksum;
 
         public PageConnectToExisting(MainWindow ParentWindow)
         {
             this.ParentWindow = ParentWindow;
             Connection = ((App)Application.Current).Connection;
             Settings = ((App)Application.Current).Settings;
+            ReturningFromChecksum = false;
+
             InitializeComponent();
         }
 
@@ -60,6 +64,11 @@ namespace kkvpn_client.Screens
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            if (ReturningFromChecksum)
+            {
+                return;
+            }
+
             try
             {
                 lblPort.Text = "Otwieranie portu, proszę czekać.";
@@ -74,13 +83,14 @@ namespace kkvpn_client.Screens
             catch (Exception ex)
             {
                 MessageBox.Show("Otwarcie portu niemożliwe: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
-                App.LogException(ex);
+                Logger.Instance.LogException(ex);
                 ReturnToConnectionMainPage();
             }
         }
 
         private void ReturnToConnectionMainPage()
         {
+            ReturningFromChecksum = false;
             ParentWindow.NavigateTo("connection");
             ParentWindow.SetVisibilityWelcomeAndSettings(true);
             ParentWindow.ChangeConnectMenuItemTarget("connection");
@@ -89,6 +99,12 @@ namespace kkvpn_client.Screens
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
             Settings.SaveToFile();
+        }
+
+        private void btnChecksum_Click(object sender, RoutedEventArgs e)
+        {
+            ReturningFromChecksum = true;
+            ParentWindow.ShowChecksum(Connection.PublicKey, "connecttoexisting");
         }
     }
 }

@@ -14,9 +14,9 @@
             <RowDefinition Height="91*"/>
             <RowDefinition Height="66*"/>
         </Grid.RowDefinitions>
-        <Image Source="\\KAJTEK-DESKTOP\Debug\help_graphics\help4.png" HorizontalAlignment="Center" Height="162" VerticalAlignment="Top" Width="269" Grid.Row="1"/>
+        <Image Source="pack://application:,,,/kkvpn_client;component/Resources/HelpGraphics/help4.png" HorizontalAlignment="Center" Height="162" VerticalAlignment="Top" Width="269" Grid.Row="1"/>
         <TextBlock HorizontalAlignment="Center" Grid.Row="2" TextWrapping="Wrap" Text="Po uzgodnieniu klucza nowy użytkownik staje się pełnoprawnym członkiem sieci. Może on na równi z innymi autoryzować kolejnych, dołączających użytkowników." VerticalAlignment="Top" Margin="68,0,58,0" Width="322" Height="80"/>
         <TextBlock HorizontalAlignment="Left" Margin="68,35,0,0" TextWrapping="Wrap" Text="Jak działa kkVPN?" VerticalAlignment="Top" Height="15" Width="118"/>
-        <sa:BasicButton Name="btnForward" Text="Powrót do początku" Height="32" Width="150" Grid.Row="2" Image="\\KAJTEK-DESKTOP\Debug\icons\back.png" Click="btnForward_Click" Margin="282,84,16,16"/>
+        <sa:BasicButton Name="btnForward" Text="Powrót do początku" Height="32" Width="150" Grid.Row="2" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/back.png" Click="btnForward_Click" Margin="282,84,16,16"/>
     </Grid>
 </Page>

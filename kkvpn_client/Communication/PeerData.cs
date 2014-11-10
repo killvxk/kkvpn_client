@@ -25,6 +25,7 @@ namespace kkvpn_client.Communication
         public int? KeyIndex;
         public Statistics Stats;
         public bool KeyExchangeInProgress;
+        private DateTime LastHeartbeatAt;
 
         public string PeerName
         {
@@ -36,9 +37,48 @@ namespace kkvpn_client.Communication
             get { return (new IPAddress((long)SubnetworkIP.InvertBytes())).ToString(); }
         }
 
+        public string StatsShort
+        {
+            get
+            {
+                if (Stats != null)
+                {
+                    return string.Format("DL: {0} KB/s UL: {1} KB/s", 
+                        Stats.DLSpeed.ToString("0.00"),
+                        Stats.ULSpeed.ToString("0.00"));
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
+        public string StatsLong
+        {
+            get
+            {
+                if (Stats != null)
+                {
+                    return string.Format("DL: {0} KB/s UL: {1} KB/s" + Environment.NewLine +
+                                         "Odebrano bajtów: {2} KB" + Environment.NewLine +
+                                         "Wysłano bajtów: {3} KB",
+                        Stats.DLSpeed.ToString("0.00"),
+                        Stats.ULSpeed.ToString("0.00"),
+                        ((double)Stats.DLBytes / 1024.0).ToString("0.00"),
+                        ((double)Stats.ULBytes / 1024.0).ToString("0.00"));
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
         public PeerData() 
         {
             this.Stats = new Statistics();
+            this.LastHeartbeatAt = DateTime.Now;
         }
 
         public PeerData(
@@ -63,6 +103,16 @@ namespace kkvpn_client.Communication
         public IPEndPoint GetEndpoint()
         {
             return new IPEndPoint((long)IP.InvertBytes(), Port);
+        }
+
+        public void Heartbeat()
+        {
+            this.LastHeartbeatAt = DateTime.Now;
+        }
+
+        public bool Timeout(int Timeout)
+        {
+            return (DateTime.Now - LastHeartbeatAt).Seconds > Timeout;
         }
 
         internal static PeerData GetDataFromBase64PeerData(Base64PeerData peerData, uint SubnetworkIP)
