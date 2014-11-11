@@ -28,6 +28,7 @@
             <sa:MenuButton Height="40" x:Name="btnStatus" Text="Status" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/status.png" Click="btnMenuButton_Click" Tag="status" Visibility="Collapsed"/>
             <sa:MenuButton Height="40" x:Name="btnPeers" Text="Połączenia" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/peers.png" Click="btnMenuButton_Click" Tag="peers" Visibility="Collapsed"/>
             <sa:MenuButton Height="40" x:Name="btnAddPeer" Text="Dodaj połączenie" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/add_peer.png" Click="btnMenuButton_Click" Tag="addpeer" Visibility="Collapsed"/>
+            <sa:MenuButton Height="40" x:Name="btnLog" Text="Zdarzenia" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/log.png" Click="btnMenuButton_Click" Tag="log" Visibility="Collapsed"/>
             <sa:MenuButton Height="40" x:Name="btnDisconnect" Text="Rozłącz" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/disconnect.png" Click="btnMenuButton_Click" Tag="disconnect" Visibility="Collapsed"/>
         </StackPanel>
         <Frame x:Name="frMain" Grid.Column="1" Background="#FFF3F3F3" Grid.Row="1" NavigationUIVisibility="Hidden"/>

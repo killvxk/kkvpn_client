@@ -14,7 +14,7 @@ namespace kkvpn_client
         private Dictionary<int, byte[]> Keys;
         private RijndaelManaged Aes;
 
-        public bool Initialize()
+        public void Initialize()
         {
             Aes = new RijndaelManaged();
             Aes.KeySize = 256;
@@ -23,8 +23,6 @@ namespace kkvpn_client
             Aes.Mode = CipherMode.CBC;
 
             Keys = new Dictionary<int, byte[]>();
-
-            return true;
         }
 
         public EncryptedData Encrypt(byte[] data, int? key)

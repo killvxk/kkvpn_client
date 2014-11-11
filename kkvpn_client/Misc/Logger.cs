@@ -37,24 +37,12 @@ namespace kkvpn_client.Misc
 
         public void LogMsg(string msg)
         {
-            StreamWriter logfile;
+            Log(DateTime.Now + ": " + msg);
+        }
 
-            if (!File.Exists(LogFileName))
-            {
-                logfile = new StreamWriter(LogFileName);
-            }
-            else
-            {
-                logfile = File.AppendText(LogFileName);
-            }
-
-            logfile.WriteLine(DateTime.Now + ": " + msg + "\n");
-            logfile.Close();
-
-            if (OnNewLogMessage != null)
-            {
-                OnNewLogMessage(this, new NewLogMessageEventArgs(DateTime.Now + ": " + msg));
-            }
+        public void LogError(string msg)
+        {
+            Log("Błąd: " + DateTime.Now + ": " + msg);
         }
 
         public void LogException(Exception ex)
@@ -76,7 +64,7 @@ namespace kkvpn_client.Misc
                 int level = 0;
                 while (e != null)
                 {
-                    string logLine = DateTime.Now + ": " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace + "\n";
+                    string logLine = "Wyjątek: " + DateTime.Now + ": " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace + "\n";
                     if (level > 0)
                     {
                         string indent = "";
@@ -95,6 +83,28 @@ namespace kkvpn_client.Misc
             if (OnNewLogMessage != null)
             {
                 OnNewLogMessage(this, new NewLogMessageEventArgs(DateTime.Now + ": " + ex.Message));
+            }
+        }
+
+        private void Log(string msg)
+        {
+            StreamWriter logfile;
+
+            if (!File.Exists(LogFileName))
+            {
+                logfile = new StreamWriter(LogFileName);
+            }
+            else
+            {
+                logfile = File.AppendText(LogFileName);
+            }
+
+            logfile.WriteLine(msg);
+            logfile.Close();
+
+            if (OnNewLogMessage != null)
+            {
+                OnNewLogMessage(this, new NewLogMessageEventArgs(msg));
             }
         }
     }

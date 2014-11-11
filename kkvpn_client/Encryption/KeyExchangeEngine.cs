@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using System.IO;
+using kkvpn_client.Misc;
 
 namespace kkvpn_client
 {
@@ -56,6 +57,7 @@ namespace kkvpn_client
                 verifyDSA.ImportCspBlob(PublicKey);
                 if (!verifyDSA.VerifyData(Material, Signature))
                 {
+                    Logger.Instance.LogError("Odebrano pakiet negocjacyjny z niepoprawnym podpisem. Klucz nie został uzgodniony!");
                     return null;
                 }
             }

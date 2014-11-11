@@ -9,9 +9,9 @@ namespace kkvpn_client
 {
     class PlainTextEngine : IEncryptionEngine
     {
-        public bool Initialize()
+        public void Initialize()
         {
-            return true;
+
         }
 
         public EncryptedData Encrypt(byte[] Data, int? key)

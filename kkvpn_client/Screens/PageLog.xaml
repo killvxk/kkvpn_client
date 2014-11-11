@@ -1,0 +1,15 @@
+﻿<Page x:Class="kkvpn_client.Screens.PageLog"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+      mc:Ignorable="d" 
+      d:DesignHeight="374" d:DesignWidth="448"
+	  Title="PageLog">
+
+    <Grid>
+        <ListBox Name="lbLog" HorizontalAlignment="Left" Height="279" Margin="30,30,0,0" VerticalAlignment="Top" Width="388"/>
+        <sa:BasicButton Name="btnClear" Text="Wyczyść okno" Height="40" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/clear.png" Margin="289,318,30,16" Click="btnClear_Click"/>
+    </Grid>
+</Page>

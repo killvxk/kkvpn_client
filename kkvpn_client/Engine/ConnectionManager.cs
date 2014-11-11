@@ -208,11 +208,6 @@ namespace kkvpn_client
             return PeersRx.Count();
         }
 
-        public Statistics GetPeerStatistics(uint ip)
-        {
-            return PeersTx[ip].Stats.UpdateStats();
-        }
-
         public string GetLowestFreeIP()
         {
             if (PeersTx.Count == 0)
@@ -261,7 +256,7 @@ namespace kkvpn_client
 
             if (ConnectionString.IndexOf(URI) > -1)
             {
-                ConnectionString.Remove(ConnectionString.IndexOf(URI), URI.Length + 1);
+                ConnectionString = ConnectionString.Remove(ConnectionString.IndexOf(URI), URI.Length + 1);
             }
 
             PeerData peer = null;
@@ -275,7 +270,7 @@ namespace kkvpn_client
             }
             catch (Exception ex)
             {
-                RemovePeerFromDictionaries(peer);
+                RemovePeerFromDictionaries(peer, null);
                 OnAddedPeer(this, new AddedPeerEventArgs(false, ex));
             }
         }
@@ -310,6 +305,7 @@ namespace kkvpn_client
             }
             catch
             {
+                Logger.Instance.LogMsg("Nie powiodło się otwarcie portu przez UPnP!");
                 _PortForwarded = false;
             }
 
@@ -501,7 +497,7 @@ namespace kkvpn_client
             }
             else if (packet is UdpGoodbye)
             {
-                RemovePeerFromDictionaries(PeersRx[ep]);
+                RemovePeerFromDictionaries(PeersRx[ep], "goodbye");
             }
             else if (packet is UdpHeartbeat)
             {
@@ -520,10 +516,11 @@ namespace kkvpn_client
                 PeersTx.Add(peer.SubnetworkIP, peer);
 
                 OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRx.Values.ToArray()));
+                Logger.Instance.LogMsg("Dodano użytkownika: " + peer.ToString());
             }
         }
 
-        private void RemovePeerFromDictionaries(PeerData peer)
+        private void RemovePeerFromDictionaries(PeerData peer, string reason)
         {
             if (peer != null)
             {
@@ -537,6 +534,14 @@ namespace kkvpn_client
                 }
 
                 OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRx.Values.ToArray()));
+                if (reason != null)
+                {
+                    Logger.Instance.LogMsg("Usunięto użytkownika (" + reason + "): " + peer.ToString());
+                }
+                else
+                {
+                    Logger.Instance.LogMsg("Usunięto użytkownika: " + peer.ToString());
+                }
             }
         }
 
@@ -604,7 +609,7 @@ namespace kkvpn_client
                         break;
                 }
                 NewPeer = null;
-                if (retryCounter == ConnectionRetries)
+                if (retryCounter > ConnectionRetries)
                     throw new NewClientNotReachedException("Czas wywołania minął!", null);
                 if (!CancelToken.IsCancellationRequested)
                     return;
@@ -700,7 +705,7 @@ namespace kkvpn_client
             {
                 if (peer != Me && peer.Timeout(NoHeartbeatTimeout))
                 {
-                    RemovePeerFromDictionaries(peer);
+                    RemovePeerFromDictionaries(peer, "timeout");
                 }
             }
         }

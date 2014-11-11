@@ -4,6 +4,7 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -86,11 +87,18 @@ namespace kkvpn_client.Screens
 
         private void btnChecksum_Click(object sender, RoutedEventArgs e)
         {
-            byte[] key = Base64PeerData.ExtractPublicKey(tbConnectionString.Text);
+            string ConnectionString = tbConnectionString.Text;
+
+            if (ConnectionString.IndexOf(':') > -1)
+            {
+                ConnectionString = ConnectionString.Remove(0, ConnectionString.IndexOf(':') + 1);
+            }
+
+            byte[] key = Base64PeerData.ExtractPublicKey(ConnectionString);
 
             if (key != null)
             {
-                ParentWindow.ShowChecksum(Connection.PublicKey, "addpeer");
+                ParentWindow.ShowChecksum(key, "addpeer");
             }
             else
             {

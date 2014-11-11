@@ -45,7 +45,8 @@ namespace kkvpn_client
                 {"help3", new PageHelp3(this)},
                 {"help4", new PageHelp4(this)},
                 {"addingpeerfailed", new PageAddingPeerFailed(this)},
-                {"checksum", new PageChecksum(this)}
+                {"checksum", new PageChecksum(this)},
+                {"log", new PageLog(this)}
             };
             Connected = false;
 
@@ -103,6 +104,7 @@ namespace kkvpn_client
             btnStatus.Visibility = visibility;
             btnPeers.Visibility = visibility;
             btnAddPeer.Visibility = visibility;
+            btnLog.Visibility = visibility;
             btnDisconnect.Visibility = visibility;
         }
 
@@ -125,6 +127,7 @@ namespace kkvpn_client
             btnStatus.Visibility = VisibilityConnection;
             btnPeers.Visibility = VisibilityConnection;
             btnAddPeer.Visibility = VisibilityConnection;
+            btnLog.Visibility = VisibilityConnection;
             btnDisconnect.Visibility = VisibilityConnection;
 
             if (Connected)

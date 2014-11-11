@@ -12,7 +12,7 @@ namespace kkvpn_client.Communication
     [ProtoInclude(103, typeof(UdpNewPeerPacket))]
     [ProtoInclude(104, typeof(UdpConnectingConfirmation))]
     [ProtoInclude(105, typeof(UdpHeartbeat))]
-    [ProtoInclude(105, typeof(UdpGoodbye))]
+    [ProtoInclude(106, typeof(UdpGoodbye))]
     class CommPacket
     {
         [ProtoMember(1)]

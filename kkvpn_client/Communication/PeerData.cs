@@ -43,6 +43,7 @@ namespace kkvpn_client.Communication
             {
                 if (Stats != null)
                 {
+                    Stats.UpdateStats();
                     return string.Format("DL: {0} KB/s UL: {1} KB/s", 
                         Stats.DLSpeed.ToString("0.00"),
                         Stats.ULSpeed.ToString("0.00"));
@@ -60,6 +61,7 @@ namespace kkvpn_client.Communication
             {
                 if (Stats != null)
                 {
+                    Stats.UpdateStats();
                     return string.Format("DL: {0} KB/s UL: {1} KB/s" + Environment.NewLine +
                                          "Odebrano bajtów: {2} KB" + Environment.NewLine +
                                          "Wysłano bajtów: {3} KB",
@@ -81,13 +83,7 @@ namespace kkvpn_client.Communication
             this.LastHeartbeatAt = DateTime.Now;
         }
 
-        public PeerData(
-            string Name,
-            UInt32 SubnetworkIP,
-            uint IP,
-            int Port,
-            byte[] PublicKey
-            )
+        public PeerData(string Name, UInt32 SubnetworkIP, uint IP, int Port, byte[] PublicKey)
             : this()
         {
             this.Name = Name;
@@ -112,7 +108,12 @@ namespace kkvpn_client.Communication
 
         public bool Timeout(int Timeout)
         {
-            return (DateTime.Now - LastHeartbeatAt).Seconds > Timeout;
+            return (DateTime.Now - LastHeartbeatAt).TotalSeconds > (double)Timeout;
+        }
+
+        public override string ToString()
+        {
+            return Name + " (" + (new IPAddress((long)IP.InvertBytes())).ToString() + ":" + Port.ToString() + ")";
         }
 
         internal static PeerData GetDataFromBase64PeerData(Base64PeerData peerData, uint SubnetworkIP)
