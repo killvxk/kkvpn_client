@@ -16,7 +16,7 @@ namespace kkvpn_client.Engine
         const uint IOCTL_REGISTER = ((0x12) << 16) | ((0x1) << 2);
         const uint IOCTL_RESTART = ((0x12) << 16) | ((0x2) << 2);
         const uint INFINITE = 0xFFFFFFFF;
-        const int BUFFER_SIZE = 0x4000;
+        const int BUFFER_SIZE = 1472;       //  92 bloki AES po 128-bitów, które nie spowodują fragmentacji pakietu UDP (chyba?)
 
         #region Structures
 
@@ -374,32 +374,3 @@ namespace kkvpn_client.Engine
         }
     }
 }
-
-    //uint totalLength = (uint)bytesRead;
-    //int offset = 0;
-    //ushort packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset)).InvertBytes();
-    
-    //while (packetLength > 0)
-    //{
-    //    byte[] temp = new byte[packetLength];
-    //    Marshal.Copy(ReadBuffer + offset, temp, 0, packetLength);
-    
-    //    if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
-    //    {
-    //        WriteData(temp);
-    //    }
-    //    else
-    //    {
-    //        DriverDataExternalProcessor(temp);
-    //    }
-    
-    //    offset += packetLength;
-    //    if (offset < totalLength)
-    //    {
-    //        packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset)).InvertBytes();
-    //    }
-    //    else
-    //    {
-    //        break;
-    //    }
-    //}

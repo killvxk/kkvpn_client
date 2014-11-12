@@ -336,13 +336,10 @@ namespace kkvpn_client
             PeersTx = new Dictionary<uint, PeerData>();
             PeersRx = new Dictionary<IPEndPoint, PeerData>();
 
-            Thread RxThread = new Thread(RxWorkerRoutine);
-            RxThread.Priority = ThreadPriority.BelowNormal;
-
             try
             {
+                StartReceivingNetworkData();
                 _Connected = true;
-                RxThread.Start();
             }
             catch
             {
@@ -395,44 +392,54 @@ namespace kkvpn_client
             DriverStarted = false;
         }
 
-        private void RxWorkerRoutine()
+        private void StartReceivingNetworkData()
         {
             Udp.Client.ReceiveTimeout = UdpReceiveTimeout;
-            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
-            while (_Connected)
+
+            Udp.BeginReceive(NetworkDataReceivedCallback, null);
+        }
+
+        private void NetworkDataReceivedCallback(IAsyncResult result)
+        {
+            try
             {
-                try
+                IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
+                byte[] data = Udp.EndReceive(result, ref ep);
+
+                if (data == null || data.Length == 0)
                 {
-                    byte[] data = Udp.Receive(ref ep);
-
-                    if (data == null || data.Length == 0)
-                    {
-                        return;
-                    }
-
-                    ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
+                    return;
                 }
-                catch (Exception ex)
+
+                ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
+
+                if (_Connected)
                 {
-                    if (ex is SocketException)
+                    Udp.BeginReceive(NetworkDataReceivedCallback, null);
+                }
+                else
+                {
+                    Udp.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SocketException)
+                {
+                    int code = ((SocketException)ex).ErrorCode;
+                    if (code != 10060 && code != 10004)
                     {
-                        int code = ((SocketException)ex).ErrorCode;
-                        if (code != 10060 && code != 10004)
-                        {
-                            MessageBox.Show(
-                                "Błąd połączenia: " + ex.Message,
-                                "Błąd",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error
-                                );
-                            Disconnect();
-                            break;
-                        }
+                        MessageBox.Show(
+                            "Błąd połączenia: " + ex.Message,
+                            "Błąd",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                            );
+                        Udp.Close();
+                        Disconnect();
                     }
                 }
             }
-
-            Udp.Close();
         }
 
         private void ProcessUdpPacket(CommPacket packet, IPEndPoint ep)
@@ -559,10 +566,10 @@ namespace kkvpn_client
 
         private void ProcessReceivedDriverData(byte[] data)
         {
-            //if (data.Length < 20)
-            //{
-            //    return;
-            //}
+            if (data.Length < 20)
+            {
+                return;
+            }
             uint sendTo = BitConverter.ToUInt32(data, 16).InvertBytes();
 
             PeerData peer = null;
