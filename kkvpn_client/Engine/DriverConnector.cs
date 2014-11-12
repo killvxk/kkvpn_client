@@ -289,40 +289,22 @@ namespace kkvpn_client.Engine
 
         unsafe void ReadCompletionCallback(uint errorCode, uint bytesRead, NativeOverlapped* nativeOverlapped)
         {
-            const int packetLengthHeaderOffset = 0x2;
             const int packetDestinationHostOffset = 0x10;
 
             try 
             {
                 if (errorCode == 0 && DriverDataExternalProcessor != null)
                 {
-                    uint totalLength = (uint)bytesRead;
-                    int offset = 0;
-                    ushort packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset)).InvertBytes();
+                    byte[] temp = new byte[bytesRead];
+                    Marshal.Copy(ReadBuffer, temp, 0, (int)bytesRead);
 
-                    while (packetLength > 0)
+                    if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
                     {
-                        byte[] temp = new byte[packetLength];
-                        Marshal.Copy(ReadBuffer + offset, temp, 0, packetLength);
-
-                        if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
-                        {
-                            WriteData(temp);
-                        }
-                        else
-                        {
-                            DriverDataExternalProcessor(temp);
-                        }
-
-                        offset += packetLength;
-                        if (offset < totalLength)
-                        {
-                            packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset)).InvertBytes();
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        WriteData(temp);
+                    }
+                    else
+                    {
+                        DriverDataExternalProcessor(temp);
                     }
                 }
 
@@ -392,3 +374,32 @@ namespace kkvpn_client.Engine
         }
     }
 }
+
+    //uint totalLength = (uint)bytesRead;
+    //int offset = 0;
+    //ushort packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + packetLengthHeaderOffset)).InvertBytes();
+    
+    //while (packetLength > 0)
+    //{
+    //    byte[] temp = new byte[packetLength];
+    //    Marshal.Copy(ReadBuffer + offset, temp, 0, packetLength);
+    
+    //    if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
+    //    {
+    //        WriteData(temp);
+    //    }
+    //    else
+    //    {
+    //        DriverDataExternalProcessor(temp);
+    //    }
+    
+    //    offset += packetLength;
+    //    if (offset < totalLength)
+    //    {
+    //        packetLength = ((ushort)Marshal.ReadInt16(ReadBuffer + offset + packetLengthHeaderOffset)).InvertBytes();
+    //    }
+    //    else
+    //    {
+    //        break;
+    //    }
+    //}

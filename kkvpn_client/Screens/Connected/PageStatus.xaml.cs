@@ -21,6 +21,8 @@ namespace kkvpn_client.Screens
     /// </summary>
     public partial class PageStatus : Page
     {
+        private const int RefreshTime = 1000;
+
         private ConnectionManager Connection;
         private MainWindow ParentWindow;
 
@@ -48,7 +50,7 @@ namespace kkvpn_client.Screens
             {
                 StatsRefreshTimer.Stop();
             }
-            StatsRefreshTimer = new Timer(250);
+            StatsRefreshTimer = new Timer(RefreshTime);
             StatsRefreshTimer.Elapsed += StatsRefreshTimer_Elapsed;
             StatsRefreshTimer.Start();
         }
