@@ -16,8 +16,8 @@ namespace kkvpn_client
         public string version = "0.1";
         [XmlElement("SubnetworkName")]
         public string SubnetworkName;
-        [XmlElement("UserName")]
-        public string UserName;
+        [XmlElement("PeerName")]
+        public string PeerName;
         [XmlElement("SubnetworkAddress")]
         public string SubnetworkAddress;
         [XmlElement("SubnetworkCIDR")]
@@ -35,7 +35,7 @@ namespace kkvpn_client
                 SubnetworkName = "Nowa sieć";
                 SubnetworkAddress = "10.254.0.0";
                 SubnetworkCIDR = 24;
-                UserName = "Użytkownik";
+                PeerName = "Użytkownik";
             }
         }
 

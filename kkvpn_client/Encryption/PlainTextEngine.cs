@@ -14,14 +14,14 @@ namespace kkvpn_client
 
         }
 
-        public EncryptedData Encrypt(byte[] Data, int? key)
+        public byte[] Encrypt(byte[] Data, int? key)
         {
-            return new EncryptedData(Data, null, 0);
+            return Data;
         }
 
-        public byte[] Decrypt(EncryptedData Data, int? key)
+        public byte[] Decrypt(byte[] Data, int? key)
         {
-            return Data.Data;
+            return Data;
         }
 
         public int AddKeyToStore(byte[] key)

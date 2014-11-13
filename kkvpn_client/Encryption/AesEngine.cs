@@ -25,7 +25,7 @@ namespace kkvpn_client
             Keys = new Dictionary<int, byte[]>();
         }
 
-        public EncryptedData Encrypt(byte[] data, int? key)
+        public byte[] Encrypt(byte[] data, int? key)
         {
             if (key == null)
             {
@@ -41,24 +41,24 @@ namespace kkvpn_client
                     stream.Write(data, 0, data.Length);
                 }
 
-                return new EncryptedData(memoryStreamEncrypt.ToArray(), Aes.IV, (ushort)data.Length);
+                return memoryStreamEncrypt.ToArray();
             }
         }
 
-        public byte[] Decrypt(EncryptedData data, int? key)
+        public byte[] Decrypt(byte[] data, int? key)
         {
             if (key == null)
             {
                 return null;
             }
 
-            using (MemoryStream memoryStreamData = new MemoryStream(data.Data))
+            using (MemoryStream memoryStreamData = new MemoryStream(data))
             {
-                byte[] decryptedData = new byte[data.Data.Length];
+                byte[] decryptedData = new byte[data.Length];
                 byte[] keyBytes = Keys[key ?? -1];
-                using (CryptoStream stream = new CryptoStream(memoryStreamData, Aes.CreateDecryptor(keyBytes, data.IV), CryptoStreamMode.Read))
+                using (CryptoStream stream = new CryptoStream(memoryStreamData, Aes.CreateDecryptor(keyBytes, null), CryptoStreamMode.Read))    //!!!!!!!!!!!!! IV!
                 {
-                    stream.Read(decryptedData, 0, data.DataLength);
+                    stream.Read(decryptedData, 0, data.Length);
                 }
 
                 return decryptedData;

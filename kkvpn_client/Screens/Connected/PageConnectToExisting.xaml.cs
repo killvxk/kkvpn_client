@@ -51,7 +51,7 @@ namespace kkvpn_client.Screens
         {
             if (tbPeerName.Text != "")
             {
-                Settings.UserName = tbPeerName.Text;
+                Settings.PeerName = tbPeerName.Text;
                 tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
             }
             else
@@ -71,9 +71,10 @@ namespace kkvpn_client.Screens
 
             try
             {
-                lblPort.Text = "Otwieranie portu, proszę czekać.";
-                await Connection.OpenForConnection();
+                tbPeerName.Text = Settings.PeerName;
                 tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
+                lblPort.Text = "Otwieranie portu, proszę czekać.";
+                await Connection.OpenForConnection();                
                 lblPort.Text = "Port otwarty, oczekiwanie na połączenie.";
             }
             catch (OperationCanceledException) 

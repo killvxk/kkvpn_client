@@ -214,17 +214,20 @@ namespace kkvpn_client
             this.Dispatcher.Invoke(() =>
             {
                 this.Activate();
-                if (Connection.Connected)
+                if (((ReceivedURIDataEventArgs)e).Args.Count() > 1)
                 {
-                    ((PageAddPeer)pages["addpeer"]).SetConnectionString(
-                        ((ReceivedURIDataEventArgs)e).Args[1]
-                        );
-                    NavigateTo("addpeer");
-                    btnAddPeer.IsChecked = true;
-                }
-                else
-                {
-                    MessageBox.Show("Aby dodać użytkownika musisz być połączony do istniejącej podsieci!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    if (Connection.Connected)
+                    {
+                        ((PageAddPeer)pages["addpeer"]).SetConnectionString(
+                            ((ReceivedURIDataEventArgs)e).Args[1]
+                            );
+                        NavigateTo("addpeer");
+                        btnAddPeer.IsChecked = true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Aby dodać użytkownika musisz być połączony do istniejącej podsieci!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
                 }
             });
         }

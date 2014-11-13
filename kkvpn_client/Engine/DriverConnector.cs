@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿using kkvpn_client.Misc;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +17,7 @@ namespace kkvpn_client.Engine
         const uint IOCTL_REGISTER = ((0x12) << 16) | ((0x1) << 2);
         const uint IOCTL_RESTART = ((0x12) << 16) | ((0x2) << 2);
         const uint INFINITE = 0xFFFFFFFF;
-        const int BUFFER_SIZE = 1472;       //  92 bloki AES po 128-bitów, które nie spowodują fragmentacji pakietu UDP (chyba?)
+        const int BUFFER_SIZE = 0x1000;
 
         #region Structures
 
@@ -293,7 +294,17 @@ namespace kkvpn_client.Engine
 
             try 
             {
-                if (errorCode == 0 && DriverDataExternalProcessor != null)
+                if (!IsStopping)
+                {
+                    ReadData();
+                }
+
+                if (bytesRead < 20)
+                {
+                    Logger.Instance.LogError("Odebrano od sterownika pakiet mniejszy niż 20 bajtów - " + bytesRead.ToString() + 
+                        " error code: " + errorCode.ToString() + ".");
+                }
+                if (errorCode == 0 && DriverDataExternalProcessor != null && bytesRead >= 20)
                 {
                     byte[] temp = new byte[bytesRead];
                     Marshal.Copy(ReadBuffer, temp, 0, (int)bytesRead);
@@ -306,11 +317,6 @@ namespace kkvpn_client.Engine
                     {
                         DriverDataExternalProcessor(temp);
                     }
-                }
-
-                if (!IsStopping)
-                {
-                    ReadData();
                 }
             }
             finally

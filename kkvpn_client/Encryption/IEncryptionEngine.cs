@@ -10,8 +10,8 @@ namespace kkvpn_client
     interface IEncryptionEngine
     {
         void Initialize();
-        EncryptedData Encrypt(byte[] data, int? key);
-        byte[] Decrypt(EncryptedData data, int? key);
+        byte[] Encrypt(byte[] data, int? key);
+        byte[] Decrypt(byte[] data, int? key);
         int AddKeyToStore(byte[] key);
         void DeleteKeyIfInStore(int? key);
     }

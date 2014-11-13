@@ -126,7 +126,7 @@ namespace kkvpn_client.Screens
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             tbNetworkName.Text = Settings.SubnetworkName;
-            tbPeerName.Text = Settings.UserName;
+            tbPeerName.Text = Settings.PeerName;
             tbAddress.Text = Settings.SubnetworkAddress;
             iudCIDR.Value = Settings.SubnetworkCIDR;
         }
@@ -138,7 +138,7 @@ namespace kkvpn_client.Screens
 
         private void tbPeerName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Settings.UserName = tbPeerName.Text;
+            Settings.PeerName = tbPeerName.Text;
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)

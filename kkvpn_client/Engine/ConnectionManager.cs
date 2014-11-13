@@ -17,7 +17,8 @@ namespace kkvpn_client
 {
     class ConnectionManager : IDisposable
     {
-        private const int UdpPort = 57384;
+        private const int UdpPortSupport = 57384;
+        private const int UdpPortTransmission = 57385;
         private const int ConnectionRetries = 10;
         private const int UdpReceiveTimeout = 1000;
         private const int NoHeartbeatTimeout = 180;
@@ -28,7 +29,8 @@ namespace kkvpn_client
 
         private Subnetwork CurrentSubnetwork;
         private uint IP;
-        private UdpClient Udp;
+        private UdpClient UdpSupport;
+        private UdpClient UdpTransmission;
         private bool _Connected;
 
         private IEncryptionEngine Encryption;
@@ -38,14 +40,16 @@ namespace kkvpn_client
         private System.Timers.Timer HeartbeatTimer;
 
         private Dictionary<UInt32, PeerData> PeersTx;
-        private Dictionary<IPEndPoint, PeerData> PeersRx;
+        private Dictionary<IPEndPoint, PeerData> PeersRxSupport;
+        private Dictionary<IPEndPoint, PeerData> PeersRxTransmission;
 
         private Statistics Stats;
         private bool _PortForwarded;
         private bool AwaitingExternalConnection;
         private bool DriverStarted;
 
-        private IPEndPoint LocalEndpoint;
+        private IPEndPoint LocalEndpointSupport;
+        private IPEndPoint LocalEndpointTransmission;
         private PeerData Me;
 
         private ManualResetEvent ReceivedConfirmation;
@@ -171,14 +175,16 @@ namespace kkvpn_client
 
         public string GetConnectionString(string UserName)
         {
-            if (LocalEndpoint == null)
+            if (LocalEndpointSupport == null)
             {
                 return "";
             }
 
             Base64PeerData peerData = new Base64PeerData(
                 UserName,
-                LocalEndpoint,
+                LocalEndpointSupport.Address.IPToInt(),
+                LocalEndpointSupport.Port,
+                LocalEndpointTransmission.Port,
                 KeyExchange.GetPublicKey()
                 );
             return URI + ":" + peerData.GetBase64EncodedData();
@@ -205,7 +211,7 @@ namespace kkvpn_client
 
         public int GetPeerCount()
         {
-            return PeersRx.Count();
+            return PeersRxSupport.Count();
         }
 
         public string GetLowestFreeIP()
@@ -280,6 +286,9 @@ namespace kkvpn_client
             UdpGoodbye goodbye = new UdpGoodbye();
             Broadcast<UdpGoodbye>(goodbye);
 
+            UdpSupport.Close();
+            UdpTransmission.Close();
+
             StopDriver();
             _Connected = false;
 
@@ -296,12 +305,17 @@ namespace kkvpn_client
 
         private void StartNetworkEngine()
         {
-            Udp = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPort));
+            UdpSupport = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPortSupport));
+            UdpTransmission = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPortTransmission));
 
             UPnPPortMapper upnp = ((App)Application.Current).UPnP;
             try
             {
-                _PortForwarded = upnp.MapPort(UdpPort, UdpPort);
+                _PortForwarded = upnp.MapPort(UdpPortSupport, UdpPortSupport);
+                if (_PortForwarded)
+                {
+                    _PortForwarded = upnp.MapPort(UdpPortTransmission, UdpPortTransmission);
+                }
             }
             catch
             {
@@ -311,7 +325,8 @@ namespace kkvpn_client
 
             if (_PortForwarded)
             {
-                LocalEndpoint = new IPEndPoint(upnp.GetExternalIP(), UdpPort);
+                LocalEndpointSupport = new IPEndPoint(upnp.GetExternalIP(), UdpPortSupport);
+                LocalEndpointTransmission = new IPEndPoint(upnp.GetExternalIP(), UdpPortTransmission);
             }
             else
             {
@@ -327,14 +342,19 @@ namespace kkvpn_client
                     }
                 }
 
-                LocalEndpoint = new IPEndPoint(
-                    ip?? new IPAddress(0),
-                    UdpPort
+                LocalEndpointSupport = new IPEndPoint(
+                    ip ?? new IPAddress(0),
+                    UdpPortSupport
+                    );
+                LocalEndpointTransmission = new IPEndPoint(
+                    ip ?? new IPAddress(0),
+                    UdpPortTransmission
                     );
             }
 
             PeersTx = new Dictionary<uint, PeerData>();
-            PeersRx = new Dictionary<IPEndPoint, PeerData>();
+            PeersRxSupport = new Dictionary<IPEndPoint, PeerData>();
+            PeersRxTransmission = new Dictionary<IPEndPoint, PeerData>();
 
             try
             {
@@ -356,8 +376,9 @@ namespace kkvpn_client
             Me = new PeerData(
                 UserName,
                 localIP,
-                LocalEndpoint.Address.IPToInt(),
-                LocalEndpoint.Port,
+                LocalEndpointSupport.Address.IPToInt(),
+                LocalEndpointSupport.Port,
+                LocalEndpointTransmission.Port,
                 KeyExchange.GetPublicKey()
                 );
             AddPeerToDictionaries(Me);
@@ -394,73 +415,113 @@ namespace kkvpn_client
 
         private void StartReceivingNetworkData()
         {
-            Udp.Client.ReceiveTimeout = UdpReceiveTimeout;
+            UdpSupport.Client.ReceiveTimeout = UdpReceiveTimeout;
+            UdpTransmission.Client.ReceiveTimeout = UdpReceiveTimeout;
 
-            Udp.BeginReceive(NetworkDataReceivedCallback, null);
+            Thread UdpSupportThread = new Thread(new ThreadStart(NetworkSupportDataWorker));
+            UdpSupportThread.Priority = ThreadPriority.BelowNormal;
+            UdpSupportThread.IsBackground = true;
+            UdpSupportThread.Start();
+
+            Thread UdpTransmissionThread = new Thread(new ThreadStart(NetworkTransmissionDataWorker));
+            UdpTransmissionThread.Priority = ThreadPriority.BelowNormal;
+            UdpTransmissionThread.IsBackground = true;
+            UdpTransmissionThread.Start();
         }
 
-        private void NetworkDataReceivedCallback(IAsyncResult result)
+        private void NetworkSupportDataWorker()
         {
-            try
+            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
+
+            while (_Connected)
             {
-                IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
-                byte[] data = Udp.EndReceive(result, ref ep);
+                try
+                {
+                    byte[] data = UdpSupport.Receive(ref ep);
 
-                if (data == null || data.Length == 0)
-                {
-                    return;
-                }
-
-                ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
-
-                if (_Connected)
-                {
-                    Udp.BeginReceive(NetworkDataReceivedCallback, null);
-                }
-                else
-                {
-                    Udp.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                if (ex is SocketException)
-                {
-                    int code = ((SocketException)ex).ErrorCode;
-                    if (code != 10060 && code != 10004)
+                    if (data == null || data.Length == 0)
                     {
-                        MessageBox.Show(
-                            "Błąd połączenia: " + ex.Message,
-                            "Błąd",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error
-                            );
-                        Udp.Close();
-                        Disconnect();
+                        return;
+                    }
+
+                    ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is SocketException)
+                    {
+                        int code = ((SocketException)ex).ErrorCode;
+                        if (code != 10060 && code != 10004)
+                        {
+                            MessageBox.Show(
+                                "Błąd połączenia: " + ex.Message,
+                                "Błąd",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error
+                                );
+                            Disconnect();
+                        }
                     }
                 }
             }
+
+            UdpSupport.Close();
+        }
+
+        private void NetworkTransmissionDataWorker()
+        {
+            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
+
+            while (_Connected)
+            {
+                try
+                {
+                    byte[] data = UdpTransmission.Receive(ref ep);
+
+                    if (data == null || data.Length == 0)
+                    {
+                        return;
+                    }
+
+                    PeerData peer = null;
+                    if (PeersRxTransmission.TryGetValue(ep, out peer))
+                    {
+                        byte[] decryptedData = Encryption.Decrypt(data, peer.KeyIndex);
+                        Driver.WriteData(decryptedData);
+
+                        Stats.DLBytes += (ulong)data.Length;
+                        Stats.DLPackets++;
+                        peer.Stats.DLBytes += (ulong)data.Length;
+                        peer.Stats.DLPackets++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex is SocketException)
+                    {
+                        int code = ((SocketException)ex).ErrorCode;
+                        if (code != 10060 && code != 10004)
+                        {
+                            MessageBox.Show(
+                                "Błąd połączenia: " + ex.Message,
+                                "Błąd",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error
+                                );
+                            Disconnect();
+                        }
+                    }
+                }
+            }
+
+            UdpTransmission.Close();
         }
 
         private void ProcessUdpPacket(CommPacket packet, IPEndPoint ep)
         {
             PeerData peer = null;
 
-            if (packet is UdpEncryptedPacket)
-            {
-                if (PeersRx.TryGetValue(ep, out peer))
-                {
-                    UdpEncryptedPacket dataPacket = (UdpEncryptedPacket)packet;
-                    byte[] data = Encryption.Decrypt(dataPacket.Data, peer.KeyIndex);
-                    Driver.WriteData(data);
-
-                    Stats.DLBytes += (ulong)data.Length;
-                    Stats.DLPackets++;
-                    peer.Stats.DLBytes += (ulong)data.Length;
-                    peer.Stats.DLPackets++;
-                }
-            }
-            else if (packet is UdpConnectingConfirmation)
+            if (packet is UdpConnectingConfirmation)
             {
                 AddPeerToDictionaries(NewPeer);
                 if (ReceivedConfirmation != null)
@@ -481,7 +542,7 @@ namespace kkvpn_client
 
                     AwaitingExternalConnection = false;
                     Thread.Sleep(100);
-                    NegotiateKey(PeersRx[ep], null);
+                    NegotiateKey(PeersRxSupport[ep], null);
                 }
                 else
                 {
@@ -497,18 +558,18 @@ namespace kkvpn_client
             }
             else if (packet is UdpKeyNegotiationPacket)
             {
-                if (PeersRx.TryGetValue(ep, out peer))
+                if (PeersRxSupport.TryGetValue(ep, out peer))
                 {
                     NegotiateKey(peer, packet as UdpKeyNegotiationPacket);
                 }
             }
             else if (packet is UdpGoodbye)
             {
-                RemovePeerFromDictionaries(PeersRx[ep], "goodbye");
+                RemovePeerFromDictionaries(PeersRxSupport[ep], "goodbye");
             }
             else if (packet is UdpHeartbeat)
             {
-                if (PeersRx.TryGetValue(ep, out peer))
+                if (PeersRxSupport.TryGetValue(ep, out peer))
                 {
                     peer.Heartbeat();
                 }
@@ -519,10 +580,11 @@ namespace kkvpn_client
         {
             if (peer != null)
             {
-                PeersRx.Add(peer.GetEndpoint(), peer);
                 PeersTx.Add(peer.SubnetworkIP, peer);
+                PeersRxSupport.Add(peer.GetSupportEndpoint(), peer);
+                PeersRxTransmission.Add(peer.GetTransmissionEndpoint(), peer);
 
-                OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRx.Values.ToArray()));
+                OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRxSupport.Values.ToArray()));
                 Logger.Instance.LogMsg("Dodano użytkownika: " + peer.ToString());
             }
         }
@@ -531,16 +593,20 @@ namespace kkvpn_client
         {
             if (peer != null)
             {
-                if (PeersRx.ContainsKey(peer.GetEndpoint()))
-                {
-                    PeersRx.Remove(peer.GetEndpoint());
-                }
                 if (PeersTx.ContainsKey(peer.SubnetworkIP))
                 {
                     PeersTx.Remove(peer.SubnetworkIP);
                 }
+                if (PeersRxSupport.ContainsKey(peer.GetSupportEndpoint()))
+                {
+                    PeersRxSupport.Remove(peer.GetSupportEndpoint());
+                }
+                if (PeersRxTransmission.ContainsKey(peer.GetSupportEndpoint()))
+                {
+                    PeersRxTransmission.Remove(peer.GetTransmissionEndpoint());
+                }
 
-                OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRx.Values.ToArray()));
+                OnPeerListChanged(this, new PeerListChangedEventArgs(PeersRxSupport.Values.ToArray()));
                 if (reason != null)
                 {
                     Logger.Instance.LogMsg("Usunięto użytkownika (" + reason + "): " + peer.ToString());
@@ -558,8 +624,9 @@ namespace kkvpn_client
             {
                 foreach (PeerData peer in peers)
                 {
-                    PeersRx.Add(peer.GetEndpoint(), peer);
                     PeersTx.Add(peer.SubnetworkIP, peer);
+                    PeersRxSupport.Add(peer.GetSupportEndpoint(), peer);
+                    PeersRxTransmission.Add(peer.GetTransmissionEndpoint(), peer);
                 }
             }
         }
@@ -575,13 +642,11 @@ namespace kkvpn_client
             PeerData peer = null;
             if (PeersTx.TryGetValue(sendTo, out peer))
             {
-                EncryptedData encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
+                byte[] encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
 
                 if (encryptedData != null)
                 {
-                    UdpEncryptedPacket packet =
-                        new UdpEncryptedPacket(0, Encryption.Encrypt(data, peer.KeyIndex));
-                    SendPacket<UdpEncryptedPacket>(packet, peer.GetEndpoint());
+                    UdpTransmission.Send(encryptedData, encryptedData.Length, peer.GetTransmissionEndpoint());
 
                     Stats.ULBytes += (ulong)data.Length;
                     Stats.ULPackets++;
@@ -600,7 +665,7 @@ namespace kkvpn_client
                     peer.Name,
                     subnetworkIP,
                     true,
-                    PeersRx.Values.ToArray(),
+                    PeersRxSupport.Values.ToArray(),
                     CurrentSubnetwork
                     );
 
@@ -611,7 +676,7 @@ namespace kkvpn_client
                 int retryCounter = 0;
                 while (retryCounter++ < ConnectionRetries && !CancelToken.IsCancellationRequested)
                 {
-                    Udp.Send(data, data.Length, peer.GetEndpoint());
+                    UdpSupport.Send(data, data.Length, peer.GetSupportEndpoint());
                     if (ReceivedConfirmation.WaitOne(2000))
                         break;
                 }
@@ -629,16 +694,7 @@ namespace kkvpn_client
                     new PeerData[1] { peer },
                     null
                     );
-                data = GetSerializedBytes<UdpNewPeerPacket>(packet);
-
-                if (PeersRx.Count() > 0)
-                {
-                    foreach (PeerData p in PeersRx.Values)
-                    {
-                        if (Me != p)
-                            Udp.Send(data, data.Length, p.GetEndpoint());
-                    }
-                }
+                Broadcast<UdpNewPeerPacket>(packet);
             });
         }
 
@@ -650,7 +706,7 @@ namespace kkvpn_client
                     KeyExchange.GetKeyMaterial(),
                     KeyExchange.GetDSASignature()
                     );
-                SendPacket<UdpKeyNegotiationPacket>(negoPacket, peer.GetEndpoint());
+                SendPacket<UdpKeyNegotiationPacket>(negoPacket, peer.GetSupportEndpoint());
             }
 
             if (packet != null)
@@ -689,7 +745,7 @@ namespace kkvpn_client
         private void SendPacket<T>(T packet, IPEndPoint ep)
         {
             byte[] data = GetSerializedBytes<T>(packet);
-            Udp.Send(data, data.Length, ep);
+            UdpSupport.Send(data, data.Length, ep);
         }
 
         private void Broadcast<T>(T packet)
@@ -698,7 +754,7 @@ namespace kkvpn_client
             {
                 if (peer != Me)
                 {
-                    SendPacket<T>(packet, peer.GetEndpoint());
+                    SendPacket<T>(packet, peer.GetSupportEndpoint());
                 }
             }
         }

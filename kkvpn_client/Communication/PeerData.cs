@@ -18,8 +18,10 @@ namespace kkvpn_client.Communication
         [ProtoMember(3)]
         public uint IP;
         [ProtoMember(4)]
-        public int Port;
+        public int PortSupport;
         [ProtoMember(5)]
+        public int PortTransmission;
+        [ProtoMember(6)]
         public byte[] PublicKey;
 
         public int? KeyIndex;
@@ -83,22 +85,28 @@ namespace kkvpn_client.Communication
             this.LastHeartbeatAt = DateTime.Now;
         }
 
-        public PeerData(string Name, UInt32 SubnetworkIP, uint IP, int Port, byte[] PublicKey)
+        public PeerData(string Name, UInt32 SubnetworkIP, uint IP, int PortSupport, int PortTransmission, byte[] PublicKey)
             : this()
         {
             this.Name = Name;
             this.SubnetworkIP = SubnetworkIP;
             this.IP = IP;
-            this.Port = Port;
+            this.PortSupport = PortSupport;
+            this.PortTransmission = PortTransmission;
             this.PublicKey = PublicKey;
             this.KeyExchangeInProgress = false;
 
             this.KeyIndex = null;
         }
 
-        public IPEndPoint GetEndpoint()
+        public IPEndPoint GetSupportEndpoint()
         {
-            return new IPEndPoint((long)IP.InvertBytes(), Port);
+            return new IPEndPoint((long)IP.InvertBytes(), PortSupport);
+        }
+
+        public IPEndPoint GetTransmissionEndpoint()
+        {
+            return new IPEndPoint((long)IP.InvertBytes(), PortTransmission);
         }
 
         public void Heartbeat()
@@ -113,7 +121,8 @@ namespace kkvpn_client.Communication
 
         public override string ToString()
         {
-            return Name + " (" + (new IPAddress((long)IP.InvertBytes())).ToString() + ":" + Port.ToString() + ")";
+            return Name + " (" + (new IPAddress((long)IP.InvertBytes())).ToString() + 
+                ":" + PortSupport.ToString() + "/" + PortTransmission.ToString() + ")";
         }
 
         internal static PeerData GetDataFromBase64PeerData(Base64PeerData peerData, uint SubnetworkIP)
@@ -122,7 +131,8 @@ namespace kkvpn_client.Communication
                 peerData.Name, 
                 SubnetworkIP, 
                 peerData.IP, 
-                peerData.Port, 
+                peerData.PortSupport, 
+                peerData.PortTransmission,
                 peerData.PublicKey
                 );
         }

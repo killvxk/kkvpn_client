@@ -17,8 +17,10 @@ namespace kkvpn_client.Communication
         [ProtoMember(2)]
         public uint IP;
         [ProtoMember(3)]
-        public int Port;
+        public int PortSupport;
         [ProtoMember(4)]
+        public int PortTransmission;
+        [ProtoMember(5)]
         public byte[] PublicKey;
 
         public Base64PeerData() { }
@@ -31,13 +33,16 @@ namespace kkvpn_client.Communication
 
         public Base64PeerData(
             string Name,
-            IPEndPoint Endpoint,
+            uint IP,
+            int PortSupport,
+            int PortTransmission,
             byte[] PublicKey
             )
         {
             this.Name = Name;
-            this.IP = Endpoint.Address.IPToInt();
-            this.Port = Endpoint.Port;
+            this.IP = IP;
+            this.PortSupport = PortSupport;
+            this.PortTransmission = PortTransmission;
             this.PublicKey = PublicKey;
         }
 
