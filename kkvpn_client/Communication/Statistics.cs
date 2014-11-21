@@ -37,5 +37,20 @@ namespace kkvpn_client
 
             return this;
         }
+
+        public void Clear()
+        {
+            DLSpeed = 0;
+            ULSpeed = 0;
+            DLPackets = 0;
+            DLBytes = 0;
+            ULPackets = 0;
+            ULBytes = 0;
+
+            LastSpeedCheckDL = 0;
+            LastSpeedCheckUL = 0;
+
+            LastSpeedCheck = Environment.TickCount;
+        }
     }
 }

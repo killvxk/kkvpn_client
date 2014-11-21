@@ -65,6 +65,10 @@ namespace kkvpn_client.Screens
 
         private void SetToIdle(AddedPeerEventArgs eventArgs)
         {
+            if (!Connection.Connected)
+            {
+                return;
+            }
             tbConnectionString.Text = "";
 
             if (eventArgs.Success)

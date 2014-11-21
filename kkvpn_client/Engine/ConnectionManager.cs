@@ -18,10 +18,10 @@ namespace kkvpn_client
     class ConnectionManager : IDisposable
     {
         private const int UdpPortSupport = 57384;
-        private const int UdpPortTransmission = 57385;
+        private const int UdpPortTransmission = 57394;
         private const int ConnectionRetries = 10;
         private const int UdpReceiveTimeout = 1000;
-        private const int NoHeartbeatTimeout = 180;
+        private const int NoHeartbeatTimeout = 120;
         private const int TimeBetweenHeartbeats = 30*1000;
         private const string URI = "kkdrv";
 
@@ -358,6 +358,7 @@ namespace kkvpn_client
 
             try
             {
+                Stats.Clear();
                 StartReceivingNetworkData();
                 _Connected = true;
             }
@@ -418,103 +419,109 @@ namespace kkvpn_client
             UdpSupport.Client.ReceiveTimeout = UdpReceiveTimeout;
             UdpTransmission.Client.ReceiveTimeout = UdpReceiveTimeout;
 
-            Thread UdpSupportThread = new Thread(new ThreadStart(NetworkSupportDataWorker));
-            UdpSupportThread.Priority = ThreadPriority.BelowNormal;
-            UdpSupportThread.IsBackground = true;
-            UdpSupportThread.Start();
+            //Thread UdpSupportThread = new Thread(new ThreadStart(NetworkSupportDataWorker));
+            //UdpSupportThread.Priority = ThreadPriority.BelowNormal;
+            //UdpSupportThread.IsBackground = true;
+            //UdpSupportThread.Start();
 
-            Thread UdpTransmissionThread = new Thread(new ThreadStart(NetworkTransmissionDataWorker));
-            UdpTransmissionThread.Priority = ThreadPriority.BelowNormal;
-            UdpTransmissionThread.IsBackground = true;
-            UdpTransmissionThread.Start();
+            UdpSupport.BeginReceive(NetworkSupportDataCallout, null);
+
+            //Thread UdpTransmissionThread = new Thread(new ThreadStart(NetworkTransmissionDataWorker));
+            //UdpTransmissionThread.Priority = ThreadPriority.BelowNormal;
+            //UdpTransmissionThread.IsBackground = true;
+            //UdpTransmissionThread.Start();
+
+            UdpTransmission.BeginReceive(NetworkTransmissionDataCallout, null);
         }
 
-        private void NetworkSupportDataWorker()
+        private void NetworkSupportDataCallout(IAsyncResult result)
         {
             IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
 
-            while (_Connected)
+            try
             {
-                try
+                byte[] data = UdpSupport.EndReceive(result, ref ep);
+
+                if (data == null || data.Length == 0)
                 {
-                    byte[] data = UdpSupport.Receive(ref ep);
-
-                    if (data == null || data.Length == 0)
-                    {
-                        return;
-                    }
-
-                    ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
+                    return;
                 }
-                catch (Exception ex)
+
+                ProcessUdpPacket(Serializer.Deserialize<CommPacket>(new MemoryStream(data)), ep);
+
+                if(_Connected)
                 {
-                    if (ex is SocketException)
+                    UdpSupport.BeginReceive(NetworkSupportDataCallout, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SocketException)
+                {
+                    int code = ((SocketException)ex).ErrorCode;
+                    if (code != 10060 && code != 10004)
                     {
-                        int code = ((SocketException)ex).ErrorCode;
-                        if (code != 10060 && code != 10004)
-                        {
-                            MessageBox.Show(
-                                "Błąd połączenia: " + ex.Message,
-                                "Błąd",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error
-                                );
-                            Disconnect();
-                        }
+                        MessageBox.Show(
+                            "Błąd połączenia: " + ex.Message,
+                            "Błąd",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                            );
+                        Logger.Instance.LogException(ex);
+                        Disconnect();
                     }
                 }
             }
-
-            UdpSupport.Close();
         }
 
-        private void NetworkTransmissionDataWorker()
+        private void NetworkTransmissionDataCallout(IAsyncResult result)
         {
             IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
 
-            while (_Connected)
+            try
             {
-                try
+                byte[] data = UdpTransmission.EndReceive(result, ref ep);
+
+                if (data == null || data.Length == 0)
                 {
-                    byte[] data = UdpTransmission.Receive(ref ep);
-
-                    if (data == null || data.Length == 0)
-                    {
-                        return;
-                    }
-
-                    PeerData peer = null;
-                    if (PeersRxTransmission.TryGetValue(ep, out peer))
-                    {
-                        byte[] decryptedData = Encryption.Decrypt(data, peer.KeyIndex);
-                        Driver.WriteData(decryptedData);
-
-                        Stats.DLBytes += (ulong)data.Length;
-                        Stats.DLPackets++;
-                        peer.Stats.DLBytes += (ulong)data.Length;
-                        peer.Stats.DLPackets++;
-                    }
+                    return;
                 }
-                catch (Exception ex)
+
+                PeerData peer = null;
+                if (PeersRxTransmission.TryGetValue(ep, out peer))
                 {
-                    if (ex is SocketException)
+                    byte[] decryptedData = Encryption.Decrypt(data, peer.KeyIndex);
+                    Driver.WriteData(decryptedData);
+
+                    Stats.DLBytes += (ulong)data.Length;
+                    Stats.DLPackets++;
+                    peer.Stats.DLBytes += (ulong)data.Length;
+                    peer.Stats.DLPackets++;
+                }
+
+                if (_Connected)
+                {
+                    UdpTransmission.BeginReceive(NetworkTransmissionDataCallout, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SocketException)
+                {
+                    int code = ((SocketException)ex).ErrorCode;
+                    if (code != 10060 && code != 10004)
                     {
-                        int code = ((SocketException)ex).ErrorCode;
-                        if (code != 10060 && code != 10004)
-                        {
-                            MessageBox.Show(
-                                "Błąd połączenia: " + ex.Message,
-                                "Błąd",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error
-                                );
-                            Disconnect();
-                        }
+                        MessageBox.Show(
+                            "Błąd połączenia: " + ex.Message,
+                            "Błąd",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                            );
+                        Logger.Instance.LogException(ex);
+                        Disconnect();
                     }
                 }
             }
-
-            UdpTransmission.Close();
         }
 
         private void ProcessUdpPacket(CommPacket packet, IPEndPoint ep)
@@ -532,6 +539,7 @@ namespace kkvpn_client
                 UdpNewPeerPacket newPeerPacket = packet as UdpNewPeerPacket;
                 if (newPeerPacket.RecipiantIsNew && AwaitingExternalConnection)
                 {
+                    AwaitingExternalConnection = false;
                     AddPeersToDictionaries(newPeerPacket.Peers);
 
                     StartDriver(newPeerPacket.SubnetworkData, newPeerPacket.SubnetworkIP, newPeerPacket.Name);
@@ -540,7 +548,6 @@ namespace kkvpn_client
                     UdpConnectingConfirmation confirmPacket = new UdpConnectingConfirmation();
                     SendPacket<UdpConnectingConfirmation>(confirmPacket, ep);
 
-                    AwaitingExternalConnection = false;
                     Thread.Sleep(100);
                     NegotiateKey(PeersRxSupport[ep], null);
                 }
@@ -558,10 +565,11 @@ namespace kkvpn_client
             }
             else if (packet is UdpKeyNegotiationPacket)
             {
-                if (PeersRxSupport.TryGetValue(ep, out peer))
+                if (!PeersRxSupport.TryGetValue(ep, out peer))
                 {
-                    NegotiateKey(peer, packet as UdpKeyNegotiationPacket);
+                    peer = NewPeer;
                 }
+                NegotiateKey(peer, packet as UdpKeyNegotiationPacket);
             }
             else if (packet is UdpGoodbye)
             {
@@ -715,12 +723,6 @@ namespace kkvpn_client
                 peer.KeyIndex = Encryption.AddKeyToStore(
                     KeyExchange.GetDerivedKey(packet.KeyMaterial, packet.DSASignature, peer.PublicKey)
                     );
-
-                //App.LogMsg(
-                //    MiscFunctions.PrintHex(
-                //        KeyExchange.GetDerivedKey(packet.KeyMaterial, packet.DSASignature, peer.PublicKey)
-                //        )
-                //    );
                 peer.KeyExchangeInProgress = false;
             }
             else

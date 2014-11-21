@@ -2,6 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -85,23 +86,23 @@ namespace kkvpn_client.Engine
         unsafe static extern bool WriteFile(
             SafeFileHandle hFile, 
             byte[] lpBuffer,
-            uint nNumberOfBytesToWrite, 
-            ref uint lpNumberOfBytesWritten,
+            uint nNumberOfBytesToWrite,
+            IntPtr lpNumberOfBytesWritten,
             NativeOverlapped* lpOverlapped
             );
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        unsafe static extern bool ReadFile(
+        unsafe static extern int ReadFile(
             SafeFileHandle hFile, 
             IntPtr lpBuffer,
             int nNumberOfBytesToRead,
-            IntPtr lpNumberOfBytesRead, 
+            IntPtr lpNumberOfBytesRead,
             NativeOverlapped* lpOverlapped
             );
 
         [DllImport("kernel32.dll")]
-        unsafe static extern int CancelIoEx(
-            SafeFileHandle hFile,
+        unsafe static extern bool CancelIoEx(
+            SafeHandle hFile, 
             NativeOverlapped* lpOverlapped
             );
 
@@ -121,7 +122,6 @@ namespace kkvpn_client.Engine
 
         private IntPtr ReadBuffer;
         private NativeOverlapped* ReadOverlapped;
-        private NativeOverlapped* WriteOverlapped;        
 
         public DriverConnector() {}
 
@@ -234,41 +234,52 @@ namespace kkvpn_client.Engine
 
             if (!Device.IsClosed && !Device.IsInvalid)
             {
-                CancelIoEx(Device, null);
                 ResetFilter();
+                StopReading();
 
                 Device.Close();
             }
         }
 
-        unsafe public void StartReading(ProcessData processor)
+        public void StartReading(ProcessData processor)
         {
             IsStopping = false;
             this.DriverDataExternalProcessor = processor;
+            ReadBuffer = Marshal.AllocHGlobal(BUFFER_SIZE);
 
-            if (Device.IsClosed || Device.IsInvalid)
-            {
-                throw new DeviceHandleInvalidException(
-                    "Nieotwarty uchwyt sterownika!"
-                    );
-            }
-
-            if (ReadBuffer == IntPtr.Zero)
-            {
-                ReadBuffer = Marshal.AllocHGlobal(BUFFER_SIZE);
-            }
-            Overlapped overlapped = new Overlapped();
-            ReadOverlapped = overlapped.Pack(ReadCompletionCallback, null);
-
-            ReadFile(Device, ReadBuffer, BUFFER_SIZE, IntPtr.Zero, ReadOverlapped);
+            ReadData();
         }
 
         public void StopReading()
         {
             IsStopping = true;
+            CancelIoEx(Device, ReadOverlapped);
+            Marshal.FreeHGlobal(ReadBuffer);
         }
 
-        unsafe public void ReadData()
+        public void WriteData(byte[] data)
+        {
+            if (!Device.IsClosed && !Device.IsInvalid)
+            {
+                Overlapped overlapped = new Overlapped();
+
+                WriteFile(
+                    Device,
+                    data,
+                    (uint)data.Length,
+                    IntPtr.Zero,
+                    overlapped.Pack(WriteDeviceIOCompletionCallback, null)
+                    );  
+            }
+        }
+
+        unsafe void WriteDeviceIOCompletionCallback(uint errorCode, uint packetsWritten, NativeOverlapped* nativeOverlapped)
+        {
+            System.Threading.Overlapped.Unpack(nativeOverlapped);
+            System.Threading.Overlapped.Free(nativeOverlapped);
+        }
+        
+        unsafe private void ReadData()
         {
             if (Device.IsClosed || Device.IsInvalid)
             {
@@ -276,85 +287,64 @@ namespace kkvpn_client.Engine
                     "Nieotwarty uchwyt sterownika!"
                     );
             }
+
             Overlapped overlapped = new Overlapped();
             ReadOverlapped = overlapped.Pack(ReadCompletionCallback, null);
 
             ReadFile(
-                Device, 
-                ReadBuffer, 
-                BUFFER_SIZE, 
+                Device,
+                ReadBuffer,
+                BUFFER_SIZE,
                 IntPtr.Zero,
                 ReadOverlapped
                 );
         }
 
-        unsafe void ReadCompletionCallback(uint errorCode, uint bytesRead, NativeOverlapped* nativeOverlapped)
+        unsafe private void ReadCompletionCallback(uint errorCode, uint bytesRead, NativeOverlapped* nativeOverlapped)
         {
             const int packetDestinationHostOffset = 0x10;
+            const int packetProtocolOffset = 0x09;
+            const int ipProtocolIpInIp = 0x04;
 
-            try 
+            if (errorCode == 0 && DriverDataExternalProcessor != null && bytesRead >= 20)
             {
-                if (!IsStopping)
-                {
-                    ReadData();
-                }
+                byte[] temp = new byte[bytesRead];
+                Marshal.Copy(ReadBuffer, temp, 0, (int)bytesRead);
 
-                if (bytesRead < 20)
+                if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
                 {
-                    Logger.Instance.LogError("Odebrano od sterownika pakiet mniejszy niż 20 bajtów - " + bytesRead.ToString() + 
-                        " error code: " + errorCode.ToString() + ".");
-                }
-                if (errorCode == 0 && DriverDataExternalProcessor != null && bytesRead >= 20)
-                {
-                    byte[] temp = new byte[bytesRead];
-                    Marshal.Copy(ReadBuffer, temp, 0, (int)bytesRead);
-
-                    if (BitConverter.ToUInt32(temp, packetDestinationHostOffset) == Local)
+                    if (temp[packetProtocolOffset] == ipProtocolIpInIp)
                     {
-                        WriteData(temp);
+                        DriverDataExternalProcessor(DecapsulateIpInIp(temp));
                     }
                     else
                     {
-                        DriverDataExternalProcessor(temp);
+                        WriteData(temp);
                     }
                 }
+                else
+                {
+                    DriverDataExternalProcessor(temp);
+                }
             }
-            finally
+
+            if (!IsStopping)
             {
-                System.Threading.Overlapped.Unpack(nativeOverlapped);
-                System.Threading.Overlapped.Free(nativeOverlapped);
+                ReadData();
             }
         }
 
-        public void WriteData(byte[] data)
+        private byte[] DecapsulateIpInIp(byte[] data)
         {
-            if (Device != null)
-            {
-                uint bytesWritten = 0;
-                Overlapped overlapped = new Overlapped();
-                WriteOverlapped = overlapped.Pack(WriteDeviceIOCompletionCallback, null);
+            const int packetHeaderLengthOffset = 0x00;
 
-                WriteFile(
-                    Device,
-                    data,
-                    (uint)data.Length,
-                    ref bytesWritten,
-                    WriteOverlapped
-                    );  
-            }
-        }
+            int outerHeaderLength = data[packetHeaderLengthOffset] & 0xF;
+            byte[] result = new byte[data.Length - outerHeaderLength];
 
-        unsafe void WriteDeviceIOCompletionCallback(uint errorCode, uint bytesWritten, NativeOverlapped* nativeOverlapped)
-        {
-            try
-            {
-                
-            }
-            finally
-            {
-                System.Threading.Overlapped.Unpack(nativeOverlapped);
-                System.Threading.Overlapped.Free(nativeOverlapped);
-            }
+            Array.Copy(data, outerHeaderLength, result, 0, result.Length);
+
+            Logger.Instance.LogMsg("Odebrano pakiet IP in IP! Prawdopodobnie powstał błąd w tablicy routingu.");
+            return result;
         }
     }
 

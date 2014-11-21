@@ -54,11 +54,6 @@ namespace kkvpn_client
 
         public void AddIP(uint ip, uint mask)
         {
-            if (CheckForExistingEntry(ip))
-            {
-                return;
-            }
-
             DeleteIP();
             int InterfaceTableSize = 0;
             IntPtr mem = IntPtr.Zero;
@@ -103,11 +98,11 @@ namespace kkvpn_client
                 startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                 startInfo.FileName = "route";
 
-                startInfo.Arguments = "delete " + (new IPAddress((long)subnetworkAddress.InvertBytes())).ToString();
+                startInfo.Arguments = "delete " + (new IPAddress((long)ip.InvertBytes())).ToString();
                 process.Start();
                 process.WaitForExit(1000);
 
-                startInfo.Arguments = "delete " + (new IPAddress((long)ip.InvertBytes())).ToString();
+                startInfo.Arguments = "delete " + (new IPAddress((long)subnetworkAddress.InvertBytes())).ToString();
                 process.Start();
                 process.WaitForExit(1000);
             }
@@ -132,24 +127,6 @@ namespace kkvpn_client
                 DeleteIPAddress(GetSavedNTEContext());
                 SaveNTEContext(0);
             }
-        }
-
-        private bool CheckForExistingEntry(uint IP)
-        {
-            uint InvertedIP = IP.InvertBytes();
-            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList)
-            {
-                if (ip.AddressFamily.ToString() == "InterNetwork")
-                {
-                    if (BitConverter.ToUInt32(ip.GetAddressBytes(), 0) == InvertedIP)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         private uint GetSavedNTEContext()

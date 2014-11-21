@@ -2,9 +2,9 @@
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
-    <StartProgram>\\KAJTEK-DESKTOP\Debug\kkvpn_client.exe</StartProgram>
+    <StartProgram>\\192.168.0.12\Debug\kkvpn_client.exe</StartProgram>
     <RemoteDebugEnabled>true</RemoteDebugEnabled>
-    <RemoteDebugMachine>drvdbg</RemoteDebugMachine>
+    <RemoteDebugMachine>drvdbg2</RemoteDebugMachine>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
 </Project>

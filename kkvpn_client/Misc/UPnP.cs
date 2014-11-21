@@ -34,6 +34,8 @@ namespace kkvpn_client
                     { }
                 }
             });
+            DiscoveryThread.IsBackground = true;
+            DiscoveryThread.Start();
         }
 
         public bool MapPort(int local, int remote)

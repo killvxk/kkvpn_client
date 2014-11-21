@@ -48,8 +48,8 @@ namespace kkvpn_client
                 {"checksum", new PageChecksum(this)},
                 {"log", new PageLog(this)}
             };
-            Connected = false;
 
+            Connected = false;
             Connection = ((App)Application.Current).Connection;
 
             InitializeComponent();
@@ -183,6 +183,10 @@ namespace kkvpn_client
             ((App)Application.Current).OnReceivedURIData += MainWindow_OnReceivedURIData;
 
             this.NavigateTo("welcome");
+
+            niNotifyIcon.Icon = Properties.Resources.Globe;
+            niNotifyIcon.LeftClickCommand = new ToolbarCommand(this);
+            niNotifyIcon.DoubleClickCommand = niNotifyIcon.LeftClickCommand;
         }
 
         private void Connection_OnConnected(object sender, EventArgs e)
@@ -261,8 +265,38 @@ namespace kkvpn_client
                 || frMain.Content == pages["checksum"])
             {
                 e.Cancel = true;
-                SystemCommands.MinimizeWindow(this);
+                //SystemCommands.MinimizeWindow(this);
+                this.Visibility = Visibility.Collapsed; 
             }
+            else
+            {
+                niNotifyIcon.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private class ToolbarCommand : ICommand
+        {
+            private MainWindow Window;
+
+            public ToolbarCommand(MainWindow Window)
+            {
+                this.Window = Window;
+            }
+
+            public void Execute(object p)
+            {
+                Window.Visibility = Visibility.Visible;
+                Window.Activate();
+            }
+
+            public bool CanExecute(object p)
+            {
+                return true;
+            }
+
+#pragma warning disable 0067
+            public event EventHandler CanExecuteChanged;
+#pragma warning restore 0067
         }
     }
 }

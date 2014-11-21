@@ -51,5 +51,10 @@
             </DockPanel.Background>
             <sa:MenuButton x:Name="btnExit" HorizontalAlignment="Right" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/close.png" Height="24" Width="24" Click="btnExit_Click"/>    
         </DockPanel>
+
+        <tb:TaskbarIcon x:Name="niNotifyIcon"
+                        ToolTipText="Klient kkVPN" 
+                        Visibility="Visible"
+        />
     </Grid>
 </Window>

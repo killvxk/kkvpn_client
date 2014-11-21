@@ -72,9 +72,9 @@ namespace kkvpn_client.Screens
             try
             {
                 tbPeerName.Text = Settings.PeerName;
-                tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
                 lblPort.Text = "Otwieranie portu, proszę czekać.";
-                await Connection.OpenForConnection();                
+                await Connection.OpenForConnection();
+                tbConnectionString.Text = Connection.GetConnectionString(tbPeerName.Text);
                 lblPort.Text = "Port otwarty, oczekiwanie na połączenie.";
             }
             catch (OperationCanceledException) 
