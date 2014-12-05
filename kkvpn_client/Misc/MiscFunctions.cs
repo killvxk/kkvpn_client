@@ -72,16 +72,10 @@ namespace kkvpn_client
 
             for (int i = 0; i < buffer.Length; i++)
             {
-                if ((i % 16) == 0)
-                    if (i != 0)
-                        res.AppendFormat("|" + Environment.NewLine + "{0:X8}  :  ", i);
-                    else
-                        res.AppendFormat(Environment.NewLine + "{0:X8}  :  ", i);
+                if ((i % 8) == 0)
+                    res.AppendFormat(Environment.NewLine + "{0:X6}  ", i);
 
-                if ((i % 8) == 0 && (i % 16) != 0)
-                    res.AppendFormat(" |  ");
-
-                res.AppendFormat("0x{0:X2}, ", buffer[i]);
+                res.AppendFormat("{0:X2} ", buffer[i]);
             }
             res.AppendFormat(Environment.NewLine + "Length: {0}" + Environment.NewLine, buffer.Length);
 

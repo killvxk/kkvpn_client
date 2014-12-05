@@ -71,6 +71,8 @@ namespace kkvpn_client
                 uint index = BitConverter.ToUInt32(data, 8);      // get interface number
                 Marshal.FreeHGlobal(mem);
 
+                ChangeChecksumOffload(index);
+
                 int retVal = AddIPAddress(
                     ip.InvertBytes(),
                     mask.InvertBytes(),
@@ -89,22 +91,22 @@ namespace kkvpn_client
                 }
                 SaveNTEContext(NTEContext);
 
-                uint subnetworkAddress = ip & mask;
+                //uint subnetworkAddress = ip & mask;
 
-                Process process = new Process();
-                ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
-                process.StartInfo = startInfo;
+                //Process process = new Process();
+                //ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+                //process.StartInfo = startInfo;
 
-                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-                startInfo.FileName = "route";
+                //startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                //startInfo.FileName = "route";
 
-                startInfo.Arguments = "delete " + (new IPAddress((long)ip.InvertBytes())).ToString();
-                process.Start();
-                process.WaitForExit(1000);
+                //startInfo.Arguments = "delete " + (new IPAddress((long)ip.InvertBytes())).ToString();
+                //process.Start();
+                //process.WaitForExit(1000);
 
-                startInfo.Arguments = "delete " + (new IPAddress((long)subnetworkAddress.InvertBytes())).ToString();
-                process.Start();
-                process.WaitForExit(1000);
+                //startInfo.Arguments = "delete " + (new IPAddress((long)subnetworkAddress.InvertBytes())).ToString();
+                //process.Start();
+                //process.WaitForExit(1000);
             }
             else
             {
@@ -114,6 +116,14 @@ namespace kkvpn_client
                     );
             }
                 
+        }
+
+        private void ChangeChecksumOffload(uint index)
+        {
+            RegistryKey reg = Registry.LocalMachine.OpenSubKey(string.Format("\\System\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\00{0:D2}", index));
+
+            reg.SetValue("*TCPChecksumOffloadIPv4", "0", RegistryValueKind.String);
+            reg.SetValue("*UDPChecksumOffloadIPv4", "0", RegistryValueKind.String);
         }
 
         public void DeleteIP()

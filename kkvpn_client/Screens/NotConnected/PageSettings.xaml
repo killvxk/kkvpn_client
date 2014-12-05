@@ -4,35 +4,32 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:sa="clr-namespace:SACustomControls;assembly=SACustomControls"
+      xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
       mc:Ignorable="d" 
       d:DesignHeight="374" d:DesignWidth="448"
 	  Title="PageSettings" Loaded="Page_Loaded"
       Unloaded="Page_Unloaded">
 
     <Grid>
-        <GroupBox Header="Klucze
-                  " HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Height="142" Width="428">
+        <GroupBox Header="Porty" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Height="112" Width="428">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="135*"/>
+                    <ColumnDefinition Width="73*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="50"/>
                     <RowDefinition Height="30"/>
-                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="25"/>
+                    <RowDefinition Height="65"/>
                 </Grid.RowDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <Image x:Name="imPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="pack://application:,,,/kkvpn_client;component/Resources/Icons/key_settings.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275"/>
-                    <Image x:Name="imNotPresent" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="40" Source="pack://application:,,,/kkvpn_client;component/Resources/Icons/key_settings_not_present.png" Margin="5,5,0,0" RenderTransformOrigin="0.3,0.275" Visibility="Collapsed"/>
-                    <TextBlock x:Name="lblKeyPresent" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Klucz jest obecny." VerticalAlignment="Center" Margin="20,18,20,10" Height="23"/>
-                </StackPanel>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <TextBlock Text="Wybrany plik klucza: " HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
-                    <TextBox x:Name="tbKeyFilePath" VerticalAlignment="Top" Height="20" Margin="5,6,5,0" Width="178" TextChanged="tbKeyFilePath_TextChanged"/>
-                    <sa:BasicButton x:Name="btnBrowse" Text="Przeglądaj" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/browse.png" Width="93" Margin="5" Click="btnBrowse_Click"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,-7">
-                    <sa:BasicButton Text="Sprawdź sumę kontrolną klucza" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/checksum.png" Width="218" Margin="5"/>
-                    <sa:BasicButton Text="Wygeneruj nowy klucz" Image="pack://application:,,,/kkvpn_client;component/Resources/Icons/generate.png" Width="163" Margin="5"/>
-                </StackPanel>
+                <TextBlock HorizontalAlignment="Left" Margin="10,14,0,0" TextWrapping="Wrap" Text="Port pomocniczy:" VerticalAlignment="Top"/>
+                <TextBlock HorizontalAlignment="Left" Margin="10,9,0,0" Grid.Row="1" TextWrapping="Wrap" Text="Port transmisyjny:" VerticalAlignment="Top"/>
+
+                <xctk:IntegerUpDown Name="iudSupport" Grid.Column="1" Margin="0,13,10,22" Grid.RowSpan="2" Value="57384" Minimum="1024" Maximum="65535"/>
+                <xctk:IntegerUpDown Name="iudTransmission" Grid.Column="1" Margin="0,0,10,62" Grid.RowSpan="2" Grid.Row="1" Height="20" VerticalAlignment="Bottom" Value="57394" Minimum="1024" Maximum="65535"/>
+                <CheckBox Name="cbRandom"  Content="Losowe porty" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" VerticalAlignment="Top" Unchecked="cbRandom_Checked" Checked="cbRandom_Checked"/>
             </Grid>
+
         </GroupBox>
 
     </Grid>

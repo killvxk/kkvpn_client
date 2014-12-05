@@ -17,18 +17,20 @@ namespace kkvpn_client
 {
     class ConnectionManager : IDisposable
     {
-        private const int UdpPortSupport = 57384;
-        private const int UdpPortTransmission = 57394;
         private const int ConnectionRetries = 10;
         private const int UdpReceiveTimeout = 1000;
         private const int NoHeartbeatTimeout = 120;
         private const int TimeBetweenHeartbeats = 30*1000;
         private const string URI = "kkdrv";
 
+        private int UdpPortSupport;
+        private int UdpPortTransmission;
+
         private AppSettings Settings;
 
         private Subnetwork CurrentSubnetwork;
         private uint IP;
+        private uint BroadcastAddress;
         private UdpClient UdpSupport;
         private UdpClient UdpTransmission;
         private bool _Connected;
@@ -81,6 +83,8 @@ namespace kkvpn_client
         {
             Stats = new Statistics();
 
+            UdpPortSupport = 57384;
+            UdpPortTransmission = 57394;
             //cancelTokenSource = new CancellationTokenSource();
 
             AwaitingExternalConnection = false;
@@ -88,6 +92,23 @@ namespace kkvpn_client
             _Connected = false;
 
             UriRegistrar.RegisterUri(URI, Environment.GetCommandLineArgs()[0]);
+        }
+
+        public void SetPortNumbers(bool random, int udpSupport, int udpTransmission)
+        {
+            if (!_Connected)
+            {
+                if (random)
+                {
+                    UdpPortSupport = (new Random((int)DateTime.Now.Ticks)).Next(1024, 65535);
+                    UdpPortTransmission = UdpPortSupport + 1;
+                }
+                else
+                {
+                    UdpPortSupport = udpSupport;
+                    UdpPortTransmission = udpTransmission;
+                }
+            }
         }
 
         public void InitializeManager()
@@ -99,8 +120,8 @@ namespace kkvpn_client
 
             InterfaceConfig = new NetworkInterfaceConfiguation();
 
-            Encryption = new PlainTextEngine();
-            //Encryption = new AesEngine();
+            //Encryption = new PlainTextEngine();
+            Encryption = new AesEngineBC();
             Encryption.Initialize();
             KeyExchange = new KeyExchangeEngine();
             KeyExchange.InitializeKey();
@@ -136,6 +157,7 @@ namespace kkvpn_client
                 }
                 catch
                 {
+                    Disconnect();
                     throw;
                 }
             }, 
@@ -206,12 +228,13 @@ namespace kkvpn_client
 
         public Statistics GetOverallStatistics()
         {
-            return Stats.UpdateStats();
+            Stats.UpdateStats();
+            return Stats;
         }
 
-        public int GetPeerCount()
+        public PeerData[] GetPeers()
         {
-            return PeersRxSupport.Count();
+            return PeersRxSupport.Values.ToArray();
         }
 
         public string GetLowestFreeIP()
@@ -286,9 +309,6 @@ namespace kkvpn_client
             UdpGoodbye goodbye = new UdpGoodbye();
             Broadcast<UdpGoodbye>(goodbye);
 
-            UdpSupport.Close();
-            UdpTransmission.Close();
-
             StopDriver();
             _Connected = false;
 
@@ -308,25 +328,26 @@ namespace kkvpn_client
             UdpSupport = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPortSupport));
             UdpTransmission = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPortTransmission));
 
-            UPnPPortMapper upnp = ((App)Application.Current).UPnP;
-            try
-            {
-                _PortForwarded = upnp.MapPort(UdpPortSupport, UdpPortSupport);
-                if (_PortForwarded)
-                {
-                    _PortForwarded = upnp.MapPort(UdpPortTransmission, UdpPortTransmission);
-                }
-            }
-            catch
-            {
-                Logger.Instance.LogMsg("Nie powiodło się otwarcie portu przez UPnP!");
-                _PortForwarded = false;
-            }
+            _PortForwarded = false;
+            //UPnPPortMapper upnp = ((App)Application.Current).UPnP;
+            //try
+            //{
+            //    _PortForwarded = upnp.MapPort(UdpPortSupport, UdpPortSupport);
+            //    if (_PortForwarded)
+            //    {
+            //        _PortForwarded = upnp.MapPort(UdpPortTransmission, UdpPortTransmission);
+            //    }
+            //}
+            //catch
+            //{
+            //    Logger.Instance.LogMsg("Nie powiodło się otwarcie portu przez UPnP!");
+            //    _PortForwarded = false;
+            //}
 
             if (_PortForwarded)
             {
-                LocalEndpointSupport = new IPEndPoint(upnp.GetExternalIP(), UdpPortSupport);
-                LocalEndpointTransmission = new IPEndPoint(upnp.GetExternalIP(), UdpPortTransmission);
+                //LocalEndpointSupport = new IPEndPoint(upnp.GetExternalIP(), UdpPortSupport);
+                //LocalEndpointTransmission = new IPEndPoint(upnp.GetExternalIP(), UdpPortTransmission);
             }
             else
             {
@@ -373,6 +394,7 @@ namespace kkvpn_client
         {
             CurrentSubnetwork = subnetwork;
             IP = localIP;
+            BroadcastAddress = subnetwork.Address | ~(subnetwork.CIDR.GetMaskFromCIDR());
 
             Me = new PeerData(
                 UserName,
@@ -440,7 +462,8 @@ namespace kkvpn_client
 
             try
             {
-                byte[] data = UdpSupport.EndReceive(result, ref ep);
+                byte[] data = null;
+                data = UdpSupport.EndReceive(result, ref ep);
 
                 if (data == null || data.Length == 0)
                 {
@@ -453,6 +476,10 @@ namespace kkvpn_client
                 {
                     UdpSupport.BeginReceive(NetworkSupportDataCallout, null);
                 }
+                else
+                {
+                    UdpSupport.Close();
+                }
             }
             catch (Exception ex)
             {
@@ -471,6 +498,20 @@ namespace kkvpn_client
                         Disconnect();
                     }
                 }
+
+                if (!(ex is ObjectDisposedException))
+                {
+                    Logger.Instance.LogException(ex);
+                }
+
+                if (_Connected)
+                {
+                    UdpSupport.BeginReceive(NetworkTransmissionDataCallout, null);
+                }
+                else
+                {
+                    UdpSupport.Close();
+                }
             }
         }
 
@@ -480,7 +521,8 @@ namespace kkvpn_client
 
             try
             {
-                byte[] data = UdpTransmission.EndReceive(result, ref ep);
+                byte[] data = null;
+                data = UdpTransmission.EndReceive(result, ref ep);
 
                 if (data == null || data.Length == 0)
                 {
@@ -493,15 +535,19 @@ namespace kkvpn_client
                     byte[] decryptedData = Encryption.Decrypt(data, peer.KeyIndex);
                     Driver.WriteData(decryptedData);
 
-                    Stats.DLBytes += (ulong)data.Length;
+                    Stats.DLBytes += (ulong)decryptedData.Length;
                     Stats.DLPackets++;
-                    peer.Stats.DLBytes += (ulong)data.Length;
+                    peer.Stats.DLBytes += (ulong)decryptedData.Length;
                     peer.Stats.DLPackets++;
                 }
 
                 if (_Connected)
                 {
                     UdpTransmission.BeginReceive(NetworkTransmissionDataCallout, null);
+                }
+                else
+                {
+                    UdpTransmission.Close();
                 }
             }
             catch (Exception ex)
@@ -520,6 +566,20 @@ namespace kkvpn_client
                         Logger.Instance.LogException(ex);
                         Disconnect();
                     }
+                }
+
+                if (!(ex is ObjectDisposedException))
+                {
+                    Logger.Instance.LogException(ex);
+                }
+
+                if (_Connected)
+                {
+                    UdpTransmission.BeginReceive(NetworkTransmissionDataCallout, null);
+                }
+                else
+                {
+                    UdpTransmission.Close();
                 }
             }
         }
@@ -648,19 +708,13 @@ namespace kkvpn_client
             uint sendTo = BitConverter.ToUInt32(data, 16).InvertBytes();
 
             PeerData peer = null;
-            if (PeersTx.TryGetValue(sendTo, out peer))
+            if (sendTo == BroadcastAddress)
             {
-                byte[] encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
-
-                if (encryptedData != null)
-                {
-                    UdpTransmission.Send(encryptedData, encryptedData.Length, peer.GetTransmissionEndpoint());
-
-                    Stats.ULBytes += (ulong)data.Length;
-                    Stats.ULPackets++;
-                    peer.Stats.ULBytes += (ulong)data.Length;
-                    peer.Stats.ULPackets++;
-                }
+                BroadcastTransmissionPacket(data);
+            }
+            else if (PeersTx.TryGetValue(sendTo, out peer))
+            {
+                EncryptAndSendTransmissionPacket(data, peer);
             }
         }
 
@@ -750,6 +804,21 @@ namespace kkvpn_client
             UdpSupport.Send(data, data.Length, ep);
         }
 
+        private void EncryptAndSendTransmissionPacket(byte[] data, PeerData peer)
+        {
+            byte[] encryptedData = Encryption.Encrypt(data, peer.KeyIndex);
+
+            if (encryptedData != null)
+            {
+                UdpTransmission.Send(encryptedData, encryptedData.Length, peer.GetTransmissionEndpoint());
+
+                Stats.ULBytes += (ulong)data.Length;
+                Stats.ULPackets++;
+                peer.Stats.ULBytes += (ulong)data.Length;
+                peer.Stats.ULPackets++;
+            }
+        }
+
         private void Broadcast<T>(T packet)
         {
             foreach (PeerData peer in PeersTx.Values)
@@ -758,6 +827,14 @@ namespace kkvpn_client
                 {
                     SendPacket<T>(packet, peer.GetSupportEndpoint());
                 }
+            }
+        }
+
+        private void BroadcastTransmissionPacket(byte[] data)
+        {
+            foreach (PeerData peer in PeersTx.Values)
+            {
+                EncryptAndSendTransmissionPacket(data, peer);
             }
         }
 

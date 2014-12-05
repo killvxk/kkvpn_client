@@ -23,8 +23,12 @@ namespace kkvpn_client.Screens
     /// </summary>
     public partial class PagePeers : Page
     {
+        private const int RefreshTime = 1000;
+
         private MainWindow ParentWindow;
         private ConnectionManager Connection;
+
+        private Timer StatsRefreshTimer;
 
         public PagePeers(MainWindow ParentWindow)
         {
@@ -33,6 +37,17 @@ namespace kkvpn_client.Screens
             InitializeComponent();
 
             Connection.OnPeerListChanged += Connection_OnPeerListChanged;
+
+            StatsRefreshTimer = new Timer(RefreshTime);
+            StatsRefreshTimer.Elapsed += StatsRefreshTimer_Elapsed;
+            StatsRefreshTimer.Start();
+        }
+
+        private void StatsRefreshTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Dispatcher.Invoke(() => {
+                RefreshPeerList(Connection.GetPeers());
+            });
         }
 
         private void RefreshPeerList(PeerData[] Peers)

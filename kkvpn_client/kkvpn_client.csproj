@@ -38,6 +38,9 @@
     <StartupObject>kkvpn_client.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>..\..\..\Downloads\bccrypto-net-1.7-bin\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
     <Reference Include="Hardcodet.Wpf.TaskbarNotification">
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net45\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
     </Reference>
@@ -74,6 +77,7 @@
   <ItemGroup>
     <Compile Include="Communication\UdpGoodbye.cs" />
     <Compile Include="Communication\UdpHeartbeat.cs" />
+    <Compile Include="Encryption\AesEngineBC.cs" />
     <Compile Include="Misc\Logger.cs" />
     <Compile Include="Screens\PageChecksum.xaml.cs">
       <DependentUpon>PageChecksum.xaml</DependentUpon>
@@ -101,7 +105,7 @@
     <Compile Include="Encryption\PlainTextEngine.cs" />
     <Compile Include="Engine\ConnectionManager.cs" />
     <Compile Include="Engine\DriverConnector.cs" />
-    <Compile Include="Engine\DriverSystemCheck.cs" />
+    <Compile Include="Engine\DriverSystemCheckAndStart.cs" />
     <Compile Include="Misc\MiscFunctions.cs" />
     <Compile Include="Engine\NetworkInterfaceConfiguation.cs" />
     <Compile Include="Communication\Subnetwork.cs" />
@@ -266,7 +270,6 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <None Include="Resources\globe.ico" />
     <Content Include="Resources\Icons\add_peer.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

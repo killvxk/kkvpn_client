@@ -1,94 +1,123 @@
-﻿using kkvpn_client.Communication;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+﻿//using kkvpn_client.Communication;
+//using System;
+//using System.Collections.Generic;
+//using System.IO;
+//using System.Linq;
+//using System.Security.Cryptography;
+//using System.Text;
+//using System.Threading.Tasks;
 
-namespace kkvpn_client
-{
-    class AesEngine : IEncryptionEngine
-    {
-        private Dictionary<int, byte[]> Keys;
-        private RijndaelManaged Aes;
+//namespace kkvpn_client
+//{
+//    class AesEngine : IEncryptionEngine
+//    {
+//        private const int AesKeySize = 256;
+//        private const int AesBlockSize = 128;
 
-        public void Initialize()
-        {
-            Aes = new RijndaelManaged();
-            Aes.KeySize = 256;
-            Aes.BlockSize = 128;
-            Aes.Padding = PaddingMode.ANSIX923;
-            Aes.Mode = CipherMode.CBC;
+//        private Dictionary<int, byte[]> Keys;
+//        private AesManaged Aes;
 
-            Keys = new Dictionary<int, byte[]>();
-        }
+//        public void Initialize()
+//        {
+//            Aes = new AesManaged();
+//            Aes.KeySize = AesKeySize;
+//            Aes.BlockSize = AesBlockSize;
+//            Aes.Padding = PaddingMode.PKCS7;
+//            Aes.Mode = CipherMode.CBC;
 
-        public byte[] Encrypt(byte[] data, int? key)
-        {
-            if (key == null)
-            {
-                return null;
-            }
+//            Keys = new Dictionary<int, byte[]>();
+//        }
 
-            using (MemoryStream memoryStreamEncrypt = new MemoryStream())
-            {
-                Aes.GenerateIV();
-                byte[] keyBytes = Keys[key ?? -1];
-                using (CryptoStream stream = new CryptoStream(memoryStreamEncrypt, Aes.CreateEncryptor(keyBytes, Aes.IV), CryptoStreamMode.Write))
-                {
-                    stream.Write(data, 0, data.Length);
-                }
+//        public byte[] Encrypt(byte[] data, int? key)
+//        {
+//            if (key == null)
+//            {
+//                return null;
+//            }
 
-                return memoryStreamEncrypt.ToArray();
-            }
-        }
+//            using (MemoryStream memoryStreamEncrypt = new MemoryStream())
+//            {
+//                Aes.GenerateIV();
+//                byte[] keyBytes = Keys[key ?? -1];
+//                using (CryptoStream stream = new CryptoStream(memoryStreamEncrypt, Aes.CreateEncryptor(keyBytes, Aes.IV), CryptoStreamMode.Write))
+//                {
+//                    stream.Write(data, 0, data.Length);
+//                }
 
-        public byte[] Decrypt(byte[] data, int? key)
-        {
-            if (key == null)
-            {
-                return null;
-            }
+//                return ConcatanateIvAndMessage(Aes.IV, memoryStreamEncrypt.ToArray());
+//            }
+//        }
 
-            using (MemoryStream memoryStreamData = new MemoryStream(data))
-            {
-                byte[] decryptedData = new byte[data.Length];
-                byte[] keyBytes = Keys[key ?? -1];
-                using (CryptoStream stream = new CryptoStream(memoryStreamData, Aes.CreateDecryptor(keyBytes, null), CryptoStreamMode.Read))    //!!!!!!!!!!!!! IV!
-                {
-                    stream.Read(decryptedData, 0, data.Length);
-                }
+//        public byte[] Decrypt(byte[] data, int? key)
+//        {
+//            if (key == null)
+//            {
+//                return null;
+//            }
 
-                return decryptedData;
-            }
-        }
+//            byte[][] div = DivideIntoIvAndMessage(data);
 
-        public int AddKeyToStore(byte[] key)
-        {
-            if (key == null)
-            {
-                return -1;
-            }
+//            using (MemoryStream memoryStreamData = new MemoryStream(div[1]))
+//            {
+//                byte[] keyBytes = Keys[key ?? -1];
+//                byte[] decryptedData = new byte[div[1].Length];
 
-            int dictKey = key.GetHashCode();
-            Keys.Add(dictKey, key);
+//                using (CryptoStream stream = new CryptoStream(memoryStreamData, Aes.CreateDecryptor(keyBytes, div[0]), CryptoStreamMode.Read))
+//                {
+//                    stream.Read(decryptedData, 0, data.Length);
+//                }
 
-            return dictKey;
-        }
+//                return decryptedData;
+//            }
+//        }
 
-        public void DeleteKeyIfInStore(int? key)
-        {
-            if (key == null)
-            {
-                return;
-            }
+//        public int AddKeyToStore(byte[] key)
+//        {
+//            if (key == null)
+//            {
+//                return -1;
+//            }
 
-            if (Keys.ContainsKey(key ?? -1))
-            {
-                Keys.Remove(key ?? -1);
-            }
-        }
-    }
-}
+//            int dictKey = key.GetHashCode();
+//            Keys.Add(dictKey, key);
+
+//            return dictKey;
+//        }
+
+//        public void DeleteKeyIfInStore(int? key)
+//        {
+//            if (key == null)
+//            {
+//                return;
+//            }
+
+//            if (Keys.ContainsKey(key ?? -1))
+//            {
+//                Keys.Remove(key ?? -1);
+//            }
+//        }
+
+//        private byte[] ConcatanateIvAndMessage(byte[] IV, byte[] message)
+//        {
+//            byte[] result = new byte[IV.Length + message.Length];
+
+//            Array.Copy(IV, 0, result, 0, IV.Length);
+//            Array.Copy(message, 0, result, IV.Length, message.Length);
+
+//            return result;
+//        }
+
+//        private byte[][] DivideIntoIvAndMessage(byte[] data)
+//        {
+//            byte[][] result = new byte[2][];
+
+//            result[0] = new byte[AesBlockSize >> 3];
+//            result[1] = new byte[data.Length - (AesBlockSize >> 3)];
+
+//            Array.Copy(data, 0, result[0], 0, result[0].Length);
+//            Array.Copy(data, result[0].Length, result[1], 0, result[1].Length);
+
+//            return result;
+//        }
+//    }
+//}

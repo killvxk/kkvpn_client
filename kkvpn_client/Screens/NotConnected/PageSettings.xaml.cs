@@ -34,49 +34,25 @@ namespace kkvpn_client.Screens
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            //tbKeyFilePath.Text = Settings.KeyFile;
-            //CheckKeyFile();
-        }
-
-        //private void CheckKeyFile()
-        //{
-        //    if (File.Exists(Settings.KeyFile))
-        //    {
-        //        imPresent.Visibility = Visibility.Visible;
-        //        imNotPresent.Visibility = Visibility.Collapsed;
-        //        lblKeyPresent.Text = "Klucz jest obecny.";
-        //    }
-        //    else
-        //    {
-        //        imPresent.Visibility = Visibility.Collapsed;
-        //        imNotPresent.Visibility = Visibility.Visible;
-        //        lblKeyPresent.Text = "Klucz nie jest obecny. Proszę wybrać plik lub wygenerować nowy klucz.";
-        //    }
-        //}
-
-        private void tbKeyFilePath_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            //Settings.KeyFile = tbKeyFilePath.Text;
-            //CheckKeyFile();
-        }
-
-        private void btnBrowse_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-
-            dialog.DefaultExt = ".xml";
-
-            if (dialog.ShowDialog()?? false)
-            {
-                tbKeyFilePath.Text = dialog.FileName;
-                //Settings.KeyFile = tbKeyFilePath.Text;
-                //CheckKeyFile();
-            }
+            iudSupport.Value = Settings.UdpSupport;
+            iudTransmission.Value = Settings.UdpTransmission;
+            cbRandom.IsChecked = Settings.UdpUseRandomPorts;
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
+            Settings.UdpSupport = iudSupport.Value ?? 57384;
+            Settings.UdpTransmission = iudTransmission.Value ?? 57394;
+            Settings.UdpUseRandomPorts = cbRandom.IsChecked ?? false;
+
+            ((App)Application.Current).Connection.SetPortNumbers(Settings.UdpUseRandomPorts, Settings.UdpSupport, Settings.UdpTransmission);
             Settings.SaveToFile();
+        }
+
+        private void cbRandom_Checked(object sender, RoutedEventArgs e)
+        {
+            iudSupport.IsEnabled = !(cbRandom.IsChecked ?? false);
+            iudTransmission.IsEnabled = !(cbRandom.IsChecked ?? false);
         }
     }
 }

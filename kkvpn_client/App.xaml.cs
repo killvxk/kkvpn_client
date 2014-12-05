@@ -22,7 +22,7 @@ namespace kkvpn_client
     /// </summary>
     partial class App : Application, ISingleInstanceApp
     {
-        private const string LogFileName = "C:\\Users\\WDKRemoteUser\\Desktop\\log.txt";
+        private const string LogFileName = "log.txt";
         private const string Unique = "kkVPN_Unique";
 
         internal ConnectionManager Connection;
@@ -71,6 +71,7 @@ namespace kkvpn_client
                         using (StreamReader sr = new StreamReader(AppSettings.ConfigFile))
                         {
                             Settings = xml.Deserialize(sr) as AppSettings;
+                            Connection.SetPortNumbers(Settings.UdpUseRandomPorts, Settings.UdpSupport, Settings.UdpTransmission);
                         }
                     }
                 }

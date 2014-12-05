@@ -22,6 +22,12 @@ namespace kkvpn_client
         public string SubnetworkAddress;
         [XmlElement("SubnetworkCIDR")]
         public int SubnetworkCIDR;
+        [XmlElement("UdpSupport")]
+        public int UdpSupport;
+        [XmlElement("UdpTransmission")]
+        public int UdpTransmission;
+        [XmlElement("UdpUseRandomPorts")]
+        public bool UdpUseRandomPorts;
 
         public AppSettings()
         {
@@ -35,6 +41,9 @@ namespace kkvpn_client
                 SubnetworkName = "Nowa sieć";
                 SubnetworkAddress = "10.254.0.0";
                 SubnetworkCIDR = 24;
+                UdpSupport = 57384;
+                UdpTransmission = 57394;
+                UdpUseRandomPorts = false;
                 PeerName = "Użytkownik";
             }
         }

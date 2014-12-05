@@ -63,11 +63,10 @@ namespace kkvpn_client.Screens
             }
             else
             {
-                this.Dispatcher.Invoke(() =>
-                {
+                this.Dispatcher.Invoke(() => {
                     Statistics stats = Connection.GetOverallStatistics();
 
-                    lblPeers.Text = Connection.GetPeerCount().ToString();
+                    lblPeers.Text = Connection.GetPeers().Length.ToString();
 
                     lblDLSpeed.Text = stats.DLSpeed.ToString("0.00") + " KB/s";
                     lblULSpeed.Text = stats.ULSpeed.ToString("0.00") + " KB/s";

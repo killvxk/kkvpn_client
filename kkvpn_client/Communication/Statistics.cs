@@ -24,7 +24,7 @@ namespace kkvpn_client
             LastSpeedCheck = Environment.TickCount;
         }
 
-        public Statistics UpdateStats()
+        public void UpdateStats()
         {
             double time = Environment.TickCount - LastSpeedCheck;
             LastSpeedCheck = Environment.TickCount;
@@ -34,8 +34,6 @@ namespace kkvpn_client
 
             LastSpeedCheckDL = this.DLBytes;
             LastSpeedCheckUL = this.ULBytes;
-
-            return this;
         }
 
         public void Clear()

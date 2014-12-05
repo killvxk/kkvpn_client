@@ -14,9 +14,11 @@ namespace kkvpn_client.Misc
         public static Logger Instance; 
         public event EventHandler OnNewLogMessage;
         private string LogFileName;
+        private object _lock;
 
         public Logger(string LogFileName)
         {
+            this._lock = new object();
             this.LogFileName = LogFileName;
 
             //Application.Current.DispatcherUnhandledException += new DispatcherUnhandledExceptionEventHandler(Application_ThreadException); // non-UI
@@ -47,64 +49,70 @@ namespace kkvpn_client.Misc
 
         public void LogException(Exception ex)
         {
-            StreamWriter logfile;
+            lock (_lock)
+            {
+                StreamWriter logfile;
 
-            if (!File.Exists(LogFileName))
-            {
-                logfile = new StreamWriter(LogFileName);
-            }
-            else
-            {
-                logfile = File.AppendText(LogFileName);
-            }
-
-            using (logfile)
-            {
-                Exception e = ex;
-                int level = 0;
-                while (e != null)
+                if (!File.Exists(LogFileName))
                 {
-                    string logLine = "Wyjątek: " + DateTime.Now + ": " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace + "\n";
-                    if (level > 0)
-                    {
-                        string indent = "";
-                        for (int i = 0; i < level; ++i) indent += "--";
-
-                        logLine = logLine.Replace("\n", indent + ">\n");
-                    }
-
-                    logfile.WriteLine(logLine);
-                    e = e.InnerException;
-                    level++;
+                    logfile = new StreamWriter(LogFileName);
                 }
-                logfile.Close();
-            }
+                else
+                {
+                    logfile = File.AppendText(LogFileName);
+                }
 
-            if (OnNewLogMessage != null)
-            {
-                OnNewLogMessage(this, new NewLogMessageEventArgs(DateTime.Now + ": " + ex.Message));
+                using (logfile)
+                {
+                    Exception e = ex;
+                    int level = 0;
+                    while (e != null)
+                    {
+                        string logLine = "Wyjątek: " + DateTime.Now + ": " + ex.Message + Environment.NewLine + "StackTrace: " + ex.StackTrace + "\n";
+                        if (level > 0)
+                        {
+                            string indent = "";
+                            for (int i = 0; i < level; ++i) indent += "--";
+
+                            logLine = logLine.Replace("\n", indent + ">\n");
+                        }
+
+                        logfile.WriteLine(logLine);
+                        e = e.InnerException;
+                        level++;
+                    }
+                    logfile.Close();
+                }
+
+                if (OnNewLogMessage != null)
+                {
+                    OnNewLogMessage(this, new NewLogMessageEventArgs("Wyjątek: " + DateTime.Now + ": " + ex.Message));
+                }
             }
         }
 
         private void Log(string msg)
         {
-            StreamWriter logfile;
-
-            if (!File.Exists(LogFileName))
+            lock (_lock)
             {
-                logfile = new StreamWriter(LogFileName);
-            }
-            else
-            {
-                logfile = File.AppendText(LogFileName);
-            }
+                StreamWriter logfile;
 
-            logfile.WriteLine(msg);
-            logfile.Close();
+                if (!File.Exists(LogFileName))
+                {
+                    logfile = new StreamWriter(LogFileName);
+                }
+                else
+                {
+                    logfile = File.AppendText(LogFileName);
+                }
 
-            if (OnNewLogMessage != null)
-            {
-                OnNewLogMessage(this, new NewLogMessageEventArgs(msg));
+                logfile.WriteLine(msg);
+                logfile.Close();
+
+                if (OnNewLogMessage != null)
+                {
+                    OnNewLogMessage(this, new NewLogMessageEventArgs(msg));
+                }
             }
         }
     }
