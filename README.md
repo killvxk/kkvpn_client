@@ -10,6 +10,7 @@ transparent for network applications running on the computer. Requires little to
 configuration to operate - connection is set up using generated connection strings, making
 setup easy and quick.
 
-A BSc Thesis - temporarily written in Polish. Will be translated to English, once BSc has been obtained :)
+A BSc Thesis - temporarily the interface language is Polish. Will be translated to English, once
+BSc has been obtained :)
 
 Created by Kajetan Bancerz
