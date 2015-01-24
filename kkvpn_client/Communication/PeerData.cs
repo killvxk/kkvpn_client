@@ -12,17 +12,17 @@ namespace kkvpn_client.Communication
     class PeerData
     {
         [ProtoMember(1)]
-        public string Name;
+        public string Name;                 // nazwa użytkownika
         [ProtoMember(2)]
-        public uint SubnetworkIP;
+        public uint SubnetworkIP;           // adres IP w wirtualnej sieci
         [ProtoMember(3)]
-        public uint IP;
+        public uint IP;                     // adres IP w sieci globalnej
         [ProtoMember(4)]
-        public int PortSupport;
+        public int PortSupport;             // numer portu pomocniczego
         [ProtoMember(5)]
-        public int PortTransmission;
+        public int PortTransmission;        // numer portu transmisji
         [ProtoMember(6)]
-        public byte[] PublicKey;
+        public byte[] PublicKey;            // klucz publiczny DSA
 
         public int? KeyIndex;
         public Statistics Stats;

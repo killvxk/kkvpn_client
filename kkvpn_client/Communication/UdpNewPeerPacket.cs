@@ -12,15 +12,17 @@ namespace kkvpn_client.Communication
     class UdpNewPeerPacket : CommPacket
     {
         [ProtoMember(1)]
-        public string Name;
+        public string Name;                     // nazwa użytkownika
         [ProtoMember(2)]
-        public uint SubnetworkIP;
+        public uint SubnetworkIP;               // adres IP w sieci wirtualnej
         [ProtoMember(3)]
-        public bool RecipiantIsNew;
+        public bool RecipientIsNew;             // flaga, true dla dołączającego węzła
         [ProtoMember(4)]
-        public PeerData[] Peers;
+        public PeerData[] Peers;                // tablica z danymi węzłów
         [ProtoMember(5)]
-        public Subnetwork SubnetworkData;
+        public Subnetwork SubnetworkData;       // dane sieci wirtualnej
+        [ProtoMember(6)]
+        public uint PreferedCipher;             // zarezerwowane
 
         public UdpNewPeerPacket()
         {
@@ -37,9 +39,10 @@ namespace kkvpn_client.Communication
         {
             this.Name = Name;
             this.SubnetworkIP = SubnetworkIP;
-            this.RecipiantIsNew = RecipiantIsNew;
+            this.RecipientIsNew = RecipiantIsNew;
             this.Peers = Peers;
             this.SubnetworkData = SubnetworkData;
+            this.PreferedCipher = 0;
         }
     }
 }

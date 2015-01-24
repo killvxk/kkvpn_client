@@ -71,7 +71,7 @@ namespace kkvpn_client
                 uint index = BitConverter.ToUInt32(data, 8);      // get interface number
                 Marshal.FreeHGlobal(mem);
 
-                ChangeChecksumOffload(index);
+                //ChangeChecksumOffload(index);
 
                 int retVal = AddIPAddress(
                     ip.InvertBytes(),
@@ -114,13 +114,12 @@ namespace kkvpn_client
                     0,
                     "Nie powiodło się ustawienie nowego adresu IP w domyślnym interfejsie!"
                     );
-            }
-                
+            }   
         }
 
         private void ChangeChecksumOffload(uint index)
         {
-            RegistryKey reg = Registry.LocalMachine.OpenSubKey(string.Format("\\System\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\00{0:D2}", index));
+            RegistryKey reg = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}" + string.Format("\\00{0:D2}", index));
 
             reg.SetValue("*TCPChecksumOffloadIPv4", "0", RegistryValueKind.String);
             reg.SetValue("*UDPChecksumOffloadIPv4", "0", RegistryValueKind.String);

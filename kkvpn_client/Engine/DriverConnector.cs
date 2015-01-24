@@ -124,11 +124,11 @@ namespace kkvpn_client.Engine
 
         public void InitializeDevice()
         {
-            //if (!DriverSystemCheckAndStart.CheckStatus(@"Root\kkdrv"))
-            //{
-            //    throw new InvalidOperationException("Nie znaleziono urządzenia!");
-            //}
-            //bool res = DriverSystemCheckAndStart.StartDriver(@"kkdrv");
+            if (!DriverSystemCheckAndStart.CheckStatus(@"Root\kkdrv"))
+            {
+                bool res = DriverSystemCheckAndStart.StartDriver();
+                //throw new InvalidOperationException("Nie znaleziono urządzenia!");
+            }
 
             Device = CreateFile(
                 fileName: DeviceName,

@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kkvpn_client", "kkvpn_client\kkvpn_client.csproj", "{CA14C213-2B82-41EF-9EE7-7300F5FC896E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "driver_installer", "driver_installer\driver_installer.csproj", "{0FF846F9-0BFB-4164-A639-136158CCF2C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CA14C213-2B82-41EF-9EE7-7300F5FC896E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA14C213-2B82-41EF-9EE7-7300F5FC896E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA14C213-2B82-41EF-9EE7-7300F5FC896E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FF846F9-0BFB-4164-A639-136158CCF2C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FF846F9-0BFB-4164-A639-136158CCF2C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FF846F9-0BFB-4164-A639-136158CCF2C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FF846F9-0BFB-4164-A639-136158CCF2C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

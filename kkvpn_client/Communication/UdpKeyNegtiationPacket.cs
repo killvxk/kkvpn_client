@@ -18,8 +18,6 @@ namespace kkvpn_client.Communication
 
         public UdpKeyNegotiationPacket(byte[] KeyMaterial, byte[] DSASignature)
         {
-            this.PacketID = Constants._TcpKeyNegotiationPacket;
-
             this.KeyMaterial = KeyMaterial;
             this.DSASignature = DSASignature;
         }

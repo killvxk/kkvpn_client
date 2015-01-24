@@ -18,7 +18,7 @@ namespace kkvpn_client
     class ConnectionManager : IDisposable
     {
         private const int ConnectionRetries = 10;
-        private const int UdpReceiveTimeout = 1000;
+        private const int UdpReceiveTimeout = 100;
         private const int NoHeartbeatTimeout = 120;
         private const int TimeBetweenHeartbeats = 30*1000;
         private const string URI = "kkdrv";
@@ -268,17 +268,18 @@ namespace kkvpn_client
                 OnAddedPeer(this, new AddedPeerEventArgs(false, new InvalidOperationException("Żadne połączenie nie jest obecnie otwarte.")));
                 return;
             }
+
+            if ((SubnetworkIP & CurrentSubnetwork.CIDR.GetMaskFromCIDR()) != CurrentSubnetwork.Address)
+            {
+                OnAddedPeer(this, new AddedPeerEventArgs(false, new InvalidOperationException("Wybrany adres IP jest spoza zakresu możliwych adresów w tej sieci.")));
+                return;
+            }
             
             foreach (uint ip in PeersTx.Keys)
             {
                 if (ip == SubnetworkIP)
                 {
-                    MessageBox.Show(
-                        "Wybrany adres IP jest już przypisany do innego użytkownika. Proszę wybrać inny.",
-                        "Błąd",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error
-                        );
+                    OnAddedPeer(this, new AddedPeerEventArgs(false, new InvalidOperationException("Wybrany adres IP jest już przypisany do innego użytkownika. Proszę wybrać inny.")));
                     return;
                 }
             }
@@ -533,12 +534,19 @@ namespace kkvpn_client
                 if (PeersRxTransmission.TryGetValue(ep, out peer))
                 {
                     byte[] decryptedData = Encryption.Decrypt(data, peer.KeyIndex);
-                    Driver.WriteData(decryptedData);
+                    if (decryptedData == null)
+                    {
+                        Logger.Instance.LogError("Odrzucono niepoprawny pakiet (niezgodność skrótów). Użytkownik: " + peer.Name);
+                    }
+                    else
+                    {
+                        Driver.WriteData(decryptedData);
 
-                    Stats.DLBytes += (ulong)decryptedData.Length;
-                    Stats.DLPackets++;
-                    peer.Stats.DLBytes += (ulong)decryptedData.Length;
-                    peer.Stats.DLPackets++;
+                        Stats.DLBytes += (ulong)decryptedData.Length;
+                        Stats.DLPackets++;
+                        peer.Stats.DLBytes += (ulong)decryptedData.Length;
+                        peer.Stats.DLPackets++;
+                    }
                 }
 
                 if (_Connected)
@@ -597,7 +605,7 @@ namespace kkvpn_client
             else if (packet is UdpNewPeerPacket)
             {
                 UdpNewPeerPacket newPeerPacket = packet as UdpNewPeerPacket;
-                if (newPeerPacket.RecipiantIsNew && AwaitingExternalConnection)
+                if (newPeerPacket.RecipientIsNew && AwaitingExternalConnection)
                 {
                     AwaitingExternalConnection = false;
                     AddPeersToDictionaries(newPeerPacket.Peers);
@@ -613,7 +621,7 @@ namespace kkvpn_client
                 }
                 else
                 {
-                    if (newPeerPacket.Peers != null)
+                    if (newPeerPacket.Peers != null && !newPeerPacket.RecipientIsNew)
                     {
                         if (newPeerPacket.Peers.Length != 0)
                         {
@@ -750,8 +758,8 @@ namespace kkvpn_client
 
                 // pakiet dla pozostałych
                 packet = new UdpNewPeerPacket(
-                    peer.Name,
-                    subnetworkIP,
+                    null,
+                    0,
                     false,
                     new PeerData[1] { peer },
                     null

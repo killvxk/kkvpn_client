@@ -9,9 +9,6 @@ namespace kkvpn_client.Communication
     [ProtoContract]
     class UdpConnectingConfirmation : CommPacket
     {
-        public UdpConnectingConfirmation()
-        {
-            this.PacketID = Constants._UdpEncryptedPacket;
-        }
+        public UdpConnectingConfirmation() { }
     }
 }

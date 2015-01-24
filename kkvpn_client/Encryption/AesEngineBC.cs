@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -76,35 +77,41 @@ namespace kkvpn_client
     {
         private const int AesKeySize = 32;
         private const int AesBlockSize = 16;
+        private const int SHA1HashSize = 20;
 
-        Random IvGenerator;
-        byte[] _key;
+        private SHA1 sha;
+        private Random ivGenerator;
+        private byte[] _key;
 
         public AesPeerEngine(byte[] key)
         {
             _key = key;
-            IvGenerator = new Random((int)DateTime.Now.Ticks);
+            ivGenerator = new Random((int)DateTime.Now.Ticks);
+            sha = SHA1.Create();
         }
 
         public byte[] Encrypt(byte[] data)
         {
             byte[] iv = new byte[AesBlockSize];
-            IvGenerator.NextBytes(iv);
+            ivGenerator.NextBytes(iv);
 
             PaddedBufferedBlockCipher _encrypt = new PaddedBufferedBlockCipher(new CbcBlockCipher(new AesFastEngine()));
             _encrypt.Init(true, new ParametersWithIV(new KeyParameter(_key), iv));
             
-            return ConcatanateIvAndMessage(iv, ProcessData(_encrypt, data));
+            return ConcatanateIvHashAndMessage(iv, ProcessData(_encrypt, data));
         }
 
         public byte[] Decrypt(byte[] data)
         {
-            byte[][] div = DivideIntoIvAndMessage(data);
+            byte[][] div = DivideIntoIvHashAndMessage(data);
 
             PaddedBufferedBlockCipher _decrypt = new PaddedBufferedBlockCipher(new CbcBlockCipher(new AesFastEngine()));
             _decrypt.Init(false, new ParametersWithIV(new KeyParameter(_key), div[0]));
 
-            return ProcessData(_decrypt, div[1]);
+            if (div[1].SequenceEqual(sha.ComputeHash(div[2])))
+                return null;
+
+            return ProcessData(_decrypt, div[2]);
         }
 
         private byte[] ProcessData(PaddedBufferedBlockCipher cipher, byte[] data)
@@ -122,13 +129,14 @@ namespace kkvpn_client
             return result;
         }
 
-        private byte[] ConcatanateIvAndMessage(byte[] IV, byte[] message)
+        private byte[] ConcatanateIvHashAndMessage(byte[] IV, byte[] message)
         {
             using (MemoryStream ms = new MemoryStream())
             {
                 using (BinaryWriter bs = new BinaryWriter(ms))
                 {
                     bs.Write(IV);
+                    bs.Write(sha.ComputeHash(message));
                     bs.Write(message);
                 }
 
@@ -136,9 +144,9 @@ namespace kkvpn_client
             }
         }
 
-        private byte[][] DivideIntoIvAndMessage(byte[] data)
+        private byte[][] DivideIntoIvHashAndMessage(byte[] data)
         {
-            byte[][] result = new byte[2][];
+            byte[][] result = new byte[3][];
 
             using (MemoryStream ms = new MemoryStream(data))
             {
@@ -147,8 +155,11 @@ namespace kkvpn_client
                     result[0] = new byte[AesBlockSize];
                     br.Read(result[0], 0, AesBlockSize);
 
-                    result[1] = new byte[data.Length - AesBlockSize];
-                    br.Read(result[1], 0, data.Length - AesBlockSize);
+                    result[1] = new byte[SHA1HashSize];
+                    br.Read(result[1], 0, SHA1HashSize);
+
+                    result[2] = new byte[data.Length - AesBlockSize - SHA1HashSize];
+                    br.Read(result[2], 0, data.Length - AesBlockSize - SHA1HashSize);
                 }
             }
 
